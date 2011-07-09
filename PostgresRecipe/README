@@ -1,0 +1,47 @@
+Postgres Recipe
+--------------
+
+This recipe is a very simple recipe to be used with our test images
+(debian-based). It will install postgres, then use an EBS volume (in sdb)
+where the database is itself stored plus some of the configuration.
+
+Right now if very crude but it gets the job done to create our backend for
+projects.eucalyptus.com.
+
+Details
+-------
+
+The scripts will stop waiting for an EBS volume to show up (it expects
+/dev/sdb).
+
+The volume will be mounted under /postgres.
+
+On the volume there should be a directory 'db' where the database is
+properly stored. It will also have pg_hba.conf to configure postgres
+properly.
+
+The setup of the database and the configuration needs to be done ahead of
+time: just create an instance, install postgres then move the database
+around. The configuration file I use set the permission to access it, for
+example it adds at the end:
+
+# trust everyone: the user will set the firewall via ec2-authorize
+hostssl all         all         0.0.0.0/0             md5
+
+
+Usage
+-----
+
+When starting with one of our debian-based images you can do something
+like
+
+	euca-run-instance emi-XXXXXX -f postgresql.sh
+
+then when the instance is up and running
+
+	euca-attach-volume -i i-XXXXXX -d /dev/sdb vol-XXXXXX
+
+after that you should have your database up and running.
+
+
+Author: graziano@eucalyptus.com
