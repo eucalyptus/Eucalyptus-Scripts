@@ -1,0 +1,26 @@
+Redmine Recipe
+--------------
+
+This recipe is to be used with out test images. It will install and
+configure redmine on an instance. The database is assumed to be on a
+different instance, and in our case we use the simple postgres script in
+PostgresRecipe.
+
+Right now if very crude but it gets the job done to create our frintend for
+projects.eucalyptus.com.
+
+Details
+-------
+
+TBD
+
+Usage
+-----
+
+When starting with one of our debian-based images you can do something
+like
+
+	euca-run-instance emi-XXXXXX -f redmine.sh
+
+
+Author: graziano@eucalyptus.com
