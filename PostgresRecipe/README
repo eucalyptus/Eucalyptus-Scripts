@@ -32,10 +32,17 @@ hostssl all         all         0.0.0.0/0             md5
 Usage
 -----
 
+Make sure you have a group which allow for port 5432 to be open from the
+database clients. I usually add also ssh. For example:
+
+	euca-add-group -d "postgres security group" postgres
+	euca-authorize -p 5432 -P tcp -s 0.0.0.0/0 postgres
+	euca-authorize -p 22 -P tcp -s 0.0.0.0/0 postgres
+
 When starting with one of our debian-based images you can do something
 like
 
-	euca-run-instance emi-XXXXXX -f postgresql.sh
+	euca-run-instance -g postgres -k XXXX emi-XXXXXX -f postgresql.sh 
 
 then when the instance is up and running
 
