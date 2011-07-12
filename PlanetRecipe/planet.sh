@@ -3,7 +3,13 @@
 # Simple script to setup planet (feed aggregator)
 #
 
+# where is the configuration stored
 WALRUS_URL="http://173.205.188.8:8773/services/Walrus/planet/"
+
+# USER to own the planet's files (ubuntu for Ubuntu, and www-data for
+# Debian)
+PLANET_USER="www-data"
+PLANET_GROUP="www-data"
 
 # update the instance
 aptitude -y update
@@ -39,11 +45,14 @@ cat >/mnt/planet/crontab <<EOF
 EOF
 
 # change permissions and then start the cronjob
-chown -R ubuntu:ubuntu /mnt/planet
-crontab -u ubuntu /mnt/planet/crontab
+chown -R ${PLANET_USER}:${PLANET_GROUP} /mnt/planet
+crontab -u ${PLANET_USER} /mnt/planet/crontab
 
-# finally let's setup nginx
-cat >/etc/nginx/sites-available/default <<EOF
+# let's remove the link to the default website
+rm /etc/nginx/sites-available/default
+
+# let's create our own simple configuration
+cat >/etc/nginx/sites-available/eucalyptus <<EOF
 server {
 	listen   80; ## listen for ipv4
 	listen   [::]:80 default ipv6only=on; ## listen for ipv6
@@ -55,5 +64,9 @@ server {
 }
 EOF
 
+# and make it available
+ln -s /etc/nginx/sites-available/eucalyptus /etc/nginx/sites-enabled/eucalyptus
+
+# start the service
 service nginx start
 
