@@ -1,0 +1,28 @@
+s3curl for Eucalyptus
+---------------------
+
+s3curl is little nifty utility that we internally use to connect to
+walrus. This is where you can download it and find more about it
+
+	http://aws.amazon.com/code/128
+
+It seems that there is no maintainer right now, nor patches are accepted,
+so for convenience we provide here a zip file of the donwload and a patch
+we need to change the URL endpoint. Once you applied the patch, you may
+call the utility with the --url option. For example to talk to a walrus
+sitting at 173.205.188.130
+
+	--url  173.205.188.130
+
+or (and this is perhaps simpler) you may specify an extra parameter (url)
+in the .s3curl, where you specify 'id' and 'key', for example
+
+	url => '173.205.188.130',
+
+You will need to specify the full service path in the command line (for
+example http://173.205.188.130:8773/services/Walrus which is conveniently
+stored in the S3_URL enviromental variable).
+
+s3curl is used with some of our script to interact with a specified walrus
+(for example to save or restore configuration files or backups).
+
