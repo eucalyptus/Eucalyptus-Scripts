@@ -1,2 +1,4 @@
 s3curl license can be found in the s3curl zip file. The Eucalyptus patch
 in this directory is released under the same s3curl license (apache 2.0).
+
+The author is graziano@eucalyptus.com.
