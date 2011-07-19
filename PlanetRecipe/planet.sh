@@ -12,7 +12,7 @@ PLANET_USER="www-data"
 PLANET_GROUP="www-data"
 
 # where is planet
-WHERE="${WHERE}"
+WHERE="/mnt"
 
 # update the instance
 aptitude -y update
