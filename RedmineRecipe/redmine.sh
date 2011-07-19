@@ -26,7 +26,7 @@ chmod 755 ${S3CURL}
 # now let's setup the id for accessing walrus
 cat >${HOME}/.s3curl <<EOF
 %awsSecretAccessKeys = (
-    my_walrus => {
+    ${WALRUS_NAME} => {
        url => '${WALRUS_IP}',
        id => '${WALRUS_ID}',
        key => '${WALRUS_KEY}',
@@ -52,15 +52,15 @@ a2enmod ssl
 a2enmod rewrite
 
 # we need the cert and key for ssl configuration
-${S3CURL} --id my_walrus --get -- $WALRUS_URL/ssl-cert.pem > /etc/ssl/certs/ssl-cert.pem
-${S3CURL} --id my_walrus --get -- $WALRUS_URL/ssl-cert.key > /etc/ssl/certs/ssl-cert.key
+${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/ssl-cert.crt > /etc/ssl/certs/ssl-cert.crt
+${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/ssl-cert.key > /etc/ssl/private/ssl-cert.key
 
 # let's setup redmine's email access and database
-${S3CURL} --id my_walrus --get -- $WALRUS_URL/email.yml > /etc/redmine/default/email.yml
-${S3CURL} --id my_walrus --get -- $WALRUS_URL/database.yml > /etc/redmine/default/database.yml
+${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/email.yml > /etc/redmine/default/email.yml
+${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/database.yml > /etc/redmine/default/database.yml
 
 # get redmine's configuration file and enable it
-${S3CURL} --id my_walrus --get -- $WALRUS_URL/redmine > /etc/apache2/sites-available/redmine
+${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/redmine > /etc/apache2/sites-available/redmine
 a2ensite redmine
 
 # start apache

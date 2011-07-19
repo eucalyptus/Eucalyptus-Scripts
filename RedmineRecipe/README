@@ -6,19 +6,34 @@ install and configure redmine on an instance. The database is assumed to
 be on a different instance, and in our case we use the simple postgres
 script in PostgresRecipe.
 
-Right now if very crude but it gets the job done to create our frintend for
-projects.eucalyptus.com.
-
 Details
 -------
 
-TBD
+The scripts needs to have s3curl credentials to access private buckets
+where the configuration is stored. The credentials and walrus endpoint are
+defined at the beginning of the script and they will need to be configured
+each time. 
+
+The script will then acquire s3curl-euca.pl from a known location and use
+it to access the private bucket for the configuration files. 
+
 
 Usage
 -----
 
+Since the instance is configured to run apache2-ssl, port 443 will need
+to be available, and usually port 22 (ssh) will be opened for maintenance
+purposes. To create a new security group and add the right permissions you
+can then:
+
+	euca-add-group -d "redmine security group" redmine
+	euca-authorize -p 443 -P tcp -s 0.0.0.0/0 redmine
+	euca-authorize -p 22 -P tcp -s 0.0.0.0/0 redmine
+
+	
 When starting with one of our debian-based images you can do something
 like
 
-	euca-run-instance emi-XXXXXX -f redmine.sh
+	euca-run-instance -f redmine.sh -g redmine -i mykey.priv emi-XXXXXX
+
 
