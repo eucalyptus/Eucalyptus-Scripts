@@ -18,10 +18,12 @@ WALRUS_URL="http://${WALRUS_IP}:8773/services/Walrus/postgres"	# conf bucket
 # instance termination
 #MOUNT_DEV="/dev/sdb"		# EBS device
 MOUNT_DEV=""			# use ephemeral
-MOUNT_POINT="/postgres"
 PG_VERSION="8.4"
+
+# where are the important directory/data
 CONF_DIR="/etc/postgresql/$PG_VERSION/main/"
 DATA_DIR="/var/lib/postgresql/$PG_VERSION/"
+MOUNT_POINT="/postgres"
 
 # user to use when working with the database
 USER="postgres"
@@ -51,7 +53,7 @@ chmod 600 ${HOME}/.s3curl
 # let's make sure we have the mountpoint
 mkdir -p $MOUNT_POINT
 
-# if using ephemeral we need to make sure it is mounted
+# are we using ephemeral or EBS?
 if [ -z "$MOUNT_DEV" ]; then
 	# let's see where ephemeral is mounted, and either mount it in the
 	# final place ($MOUNT_POINT) or mount -o bind
@@ -62,6 +64,7 @@ if [ -z "$MOUNT_DEV" ]; then
 	fi
 	if [ -z "${EPHEMERAL}" ]; then
 		echo "Cannot find ephemeral partition!"
+		exit 1
 	else
 		# let's see if it is mounted
 		if ! mount | grep ${EPHEMERAL} ; then
@@ -76,6 +79,9 @@ else
 		echo "waiting for EBS volume ($MOUNT_DEV) ..."
 		sleep 10
 	done
+
+	# if there is already a database ($MOUNT_POINT/db) in the volume
+	# we'll use it, otherwise we will recover from walrus
 fi
 
 # update the instance
@@ -112,6 +118,7 @@ if [ ! -d $MOUNT_POINT/db ]; then
 	# and recover from bucket
 	${S3_CURL} --id ${WALRUS_NAME} --get -- ${WALRUS_URL}/backup > /$MOUNT_POINT/backup
 	psql -f /$MOUNT_POINT/backup postgres
+	rm /$MOUNT_POINT/backup
 else
 	# database is in place: just start 
 	/etc/init.d/postgresql start
@@ -120,9 +127,9 @@ fi
 # set up a cron-job to save the database to a bucket
 cat >/usr/local/bin/pg_backup.sh <<EOF
 #!/bin/sh
-pg_dumpall > /root/backup
-${S3_CURL} --id ${WALRUS_NAME} --put /root/backup -- ${WALRUS_URL}/backup
-rm /root/backup
+pg_dumpall > /$MOUNT_POINT/backup
+${S3_CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- ${WALRUS_URL}/backup
+rm /$MOUNT_POINT/backup
 EOF
 chmod +x /usr/local/bin/pg_backup.sh
 
