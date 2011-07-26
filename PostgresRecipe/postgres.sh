@@ -9,9 +9,12 @@
 # reflect your walrus configuration
 WALRUS_NAME="my_walrus"                 # arbitrary name 
 WALRUS_IP="173.205.188.8"               # IP of the walrus to use
-WALRUS_KEY="xxxxxxxxxxxxxxxxxxxx"       # EC2_ACCESS_KEY
-WALRUS_ID="xxxxxxxxxxxxxxxxxxxx"        # EC2_SECRET_KEY
+WALRUS_ID="xxxxxxxxxxxxxxxxxxxxx"       # EC2_ACCESS_KEY
+WALRUS_KEY="xxxxxxxxxxxxxxxxxxx"        # EC2_SECRET_KEY
 WALRUS_URL="http://${WALRUS_IP}:8773/services/Walrus/postgres"	# conf bucket
+
+# do backup on walrus?
+WALRUS_BACKUP="N"
 
 # use MOUNT_DEV to wait for an EBS volume, otherwise we'll be using
 # ephemeral: WARNING when using ephemeral you may be loosing data uping
@@ -35,10 +38,12 @@ USER="postgres"
 S3CURL="/usr/bin/s3curl-euca.pl"
 
 # get the s3curl script
+echo "Getting ${S3CURL}"
 curl -f -o ${S3CURL} --url http://173.205.188.8:8773/services/Walrus/s3curl/s3curl-euca.pl
 chmod 755 ${S3CURL}
 
 # now let's setup the id for accessing walrus
+echo "Setting credentials for ${S3CURL}"
 cat >${HOME}/.s3curl <<EOF
 %awsSecretAccessKeys = (
 	${WALRUS_NAME} => {
@@ -51,26 +56,30 @@ EOF
 chmod 600 ${HOME}/.s3curl
 
 # let's make sure we have the mountpoint
+echo "Creating and prepping $MOUNT_POINT"
 mkdir -p $MOUNT_POINT
 
 # are we using ephemeral or EBS?
 if [ -z "$MOUNT_DEV" ]; then
-	# let's see where ephemeral is mounted, and either mount it in the
-	# final place ($MOUNT_POINT) or mount -o bind
-	EPHEMERAL="`curl -f -m 20 http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0`"
-	if [ -z "${EPHEMERAL}" ]; then
-		# workaround for a bug in EEE 2
-		EPHEMERAL="`curl -f -m 20 http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral`"
-	fi
-	if [ -z "${EPHEMERAL}" ]; then
-		echo "Cannot find ephemeral partition!"
-		exit 1
-	else
-		# let's see if it is mounted
-		if ! mount | grep ${EPHEMERAL} ; then
-			mount /dev/${EPHEMERAL} $MOUNT_POINT
+	# don't mount $MOUNT_POINT more than once (mainly for debugging)
+	if ! mount |grep $MOUNT_POINT; then
+		# let's see where ephemeral is mounted, and either mount
+		# it in the final place ($MOUNT_POINT) or mount -o bind
+		EPHEMERAL="`curl -f -m 20 http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0`"
+		if [ -z "${EPHEMERAL}" ]; then
+			# workaround for a bug in EEE 2
+			EPHEMERAL="`curl -f -m 20 http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral`"
+		fi
+		if [ -z "${EPHEMERAL}" ]; then
+			echo "Cannot find ephemeral partition!"
+			exit 1
 		else
-			mount -o bind `mount | grep ${EPHEMERAL} | cut -f 3 -d ' '` $MOUNT_POINT
+			# let's see if it is mounted
+			if ! mount | grep ${EPHEMERAL} ; then
+				mount /dev/${EPHEMERAL} $MOUNT_POINT
+			else
+				mount -o bind `mount | grep ${EPHEMERAL} | cut -f 3 -d ' '` $MOUNT_POINT
+			fi
 		fi
 	fi
 else
@@ -80,22 +89,24 @@ else
 		sleep 10
 	done
 
-	# if there is already a database ($MOUNT_POINT/db) in the volume
+	# if there is already a database ($MOUNT_POINT/main) in the volume
 	# we'll use it, otherwise we will recover from walrus
 fi
 
 # update the instance
+echo "Upgrading and installing packages"
 aptitude -y update
 aptitude -y upgrade
 
 # install postgres
-aptitude install -y postgresql
+aptitude install -y postgresql libdigest-hmac-perl
 
 # stop the database
+echo "Setting up postgres"
 /etc/init.d/postgresql stop
 
 # change where the data directory is and listen to all interfaces
-sed -i "1,$ s;^\(data_directory\).*;\1 = '$MOUNT_POINT/db';" $CONF_DIR/postgresql.conf
+sed -i "1,$ s;^\(data_directory\).*;\1 = '$MOUNT_POINT/main';" $CONF_DIR/postgresql.conf
 sed -i "1,$ s;^#\(listen_addresses\).*;\1 = '*';" $CONF_DIR/postgresql.conf
 
 # we need to set postgres to trust access from the network: euca-authorize
@@ -105,9 +116,12 @@ cat >>$CONF_DIR/pg_hba.conf <<EOF
 hostssl all         all         0.0.0.0/0             md5
 EOF
 
+# let's make sure $USER can write in the right place
+chown ${USER} $MOUNT_POINT
+
 # now let's see if we have an already existing database on the target
 # directory
-if [ ! -d $MOUNT_POINT/db ]; then
+if [ ! -d $MOUNT_POINT/main ]; then
 	# nope: let's recover from the bucket: let's get the default
 	# structure in
 	(cd $DATA_DIR; tar czf - *)|(cd $MOUNT_POINT; tar xzf -)
@@ -116,8 +130,15 @@ if [ ! -d $MOUNT_POINT/db ]; then
 	/etc/init.d/postgresql start
 
 	# and recover from bucket
-	${S3_CURL} --id ${WALRUS_NAME} --get -- ${WALRUS_URL}/backup > /$MOUNT_POINT/backup
-	psql -f /$MOUNT_POINT/backup postgres
+	${S3CURL} --id ${WALRUS_NAME} -- ${WALRUS_URL}/backup > /$MOUNT_POINT/backup
+	# check for error
+	if [ "`head -c 6 /$MOUNT_POINT/backup`" = "<Error" ]; then
+		echo "Cannot get backup! Database will be empty"
+	else 
+		chown ${USER} /$MOUNT_POINT/backup
+		chmod 600 /$MOUNT_POINT/backup
+		su - -c "psql -f /$MOUNT_POINT/backup postgres" postgres
+	fi
 	rm /$MOUNT_POINT/backup
 else
 	# database is in place: just start 
@@ -127,18 +148,22 @@ fi
 # set up a cron-job to save the database to a bucket
 cat >/usr/local/bin/pg_backup.sh <<EOF
 #!/bin/sh
-pg_dumpall > /$MOUNT_POINT/backup
-${S3_CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- ${WALRUS_URL}/backup
+su - -c "pg_dumpall > /$MOUNT_POINT/backup" ${USER}
+# WARNING: the bucket in ${WALRUS_URL} *must* have been already created
+${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- ${WALRUS_URL}/backup
 rm /$MOUNT_POINT/backup
 EOF
 chmod +x /usr/local/bin/pg_backup.sh
+chown ${USER} /usr/local/bin/pg_backup.sh
+
+if [ "$WALRUS_BACKUP" != "Y" ]; then
+	# we are done here
+	exit 0
+fi
 
 # and turn it into a cronjob
 cat >/root/crontab <<EOF
-2,17,32,47 * * * * /usr/local/bin/pg_backup.sh
+*/15 * * * * /usr/local/bin/pg_backup.sh
 EOF
-
-# change permissions and then start the cronjob
-chown ${USER} /usr/local/bin/pg_backup.sh
 crontab -u ${USER} /usr/local/bin/pg_backup.sh
 
