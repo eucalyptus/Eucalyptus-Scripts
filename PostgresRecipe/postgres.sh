@@ -12,9 +12,10 @@ WALRUS_IP="173.205.188.8"               # IP of the walrus to use
 WALRUS_ID="xxxxxxxxxxxxxxxxxxxxx"       # EC2_ACCESS_KEY
 WALRUS_KEY="xxxxxxxxxxxxxxxxxxx"        # EC2_SECRET_KEY
 WALRUS_URL="http://${WALRUS_IP}:8773/services/Walrus/postgres"	# conf bucket
+WALRUS_MASTER="backup"			# master copy of the database
 
 # do backup on walrus?
-WALRUS_BACKUP="N"
+WALRUS_BACKUP="Y"
 
 # use MOUNT_DEV to wait for an EBS volume, otherwise we'll be using
 # ephemeral: WARNING when using ephemeral you may be loosing data uping
@@ -130,16 +131,18 @@ if [ ! -d $MOUNT_POINT/main ]; then
 	/etc/init.d/postgresql start
 
 	# and recover from bucket
-	${S3CURL} --id ${WALRUS_NAME} -- ${WALRUS_URL}/backup > /$MOUNT_POINT/backup
+	${S3CURL} --id ${WALRUS_NAME} -- ${WALRUS_URL}/${WALRUS_MASTER} > /$MOUNT_POINT/backup
 	# check for error
 	if [ "`head -c 6 /$MOUNT_POINT/backup`" = "<Error" ]; then
-		echo "Cannot get backup! Database will be empty"
+		echo "Cannot get backup!"
+		echo "Database is empty: disabling auto-backup."
+		WALRUS_BACKUP="N"
 	else 
 		chown ${USER} /$MOUNT_POINT/backup
 		chmod 600 /$MOUNT_POINT/backup
 		su - -c "psql -f /$MOUNT_POINT/backup postgres" postgres
+		rm /$MOUNT_POINT/backup
 	fi
-	rm /$MOUNT_POINT/backup
 else
 	# database is in place: just start 
 	/etc/init.d/postgresql start
@@ -150,9 +153,16 @@ cat >/usr/local/bin/pg_backup.sh <<EOF
 #!/bin/sh
 su - -c "pg_dumpall > /$MOUNT_POINT/backup" ${USER}
 # WARNING: the bucket in ${WALRUS_URL} *must* have been already created
-${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- ${WALRUS_URL}/backup
+# keep one copy per day of the month
+${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- ${WALRUS_URL}/${WALRUS_MASTER}-day_of_month
+# and push it to be the latest backup too for easy recovery
+${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- ${WALRUS_URL}/${WALRUS_MASTER}
 rm /$MOUNT_POINT/backup
 EOF
+# substitute to get the day of month
+sed -i 's/-day_of_month/-$(date +%d)/' /usr/local/bin/pg_backup.sh
+
+# change execute permissions and ownership
 chmod +x /usr/local/bin/pg_backup.sh
 chown ${USER} /usr/local/bin/pg_backup.sh
 
@@ -161,9 +171,10 @@ if [ "$WALRUS_BACKUP" != "Y" ]; then
 	exit 0
 fi
 
-# and turn it into a cronjob
-cat >/root/crontab <<EOF
-*/15 * * * * /usr/local/bin/pg_backup.sh
+# and turn it into a cronjob to run every hour
+cat >/tmp/crontab <<EOF
+30 * * * * /usr/local/bin/pg_backup.sh
 EOF
-crontab -u ${USER} /usr/local/bin/pg_backup.sh
+chown ${USER} /tmp/crontab
+crontab -u ${USER} /tmp/crontab
 
