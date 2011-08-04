@@ -96,11 +96,11 @@ fi
 
 # update the instance
 echo "Upgrading and installing packages"
-aptitude -y update
-aptitude -y upgrade
+apt-get --force-yes -y update
+apt-get --force-yes -y upgrade
 
 # install postgres
-aptitude install -y postgresql libdigest-hmac-perl
+apt-get install --force-yes -y postgresql libdigest-hmac-perl
 
 # stop the database
 echo "Setting up postgres"

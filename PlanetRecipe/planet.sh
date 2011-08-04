@@ -15,11 +15,11 @@ PLANET_GROUP="www-data"
 WHERE="/mnt"
 
 # update the instance
-aptitude -y update
-aptitude -y upgrade
+apt-get --force-yes -y update
+apt-get --force-yes -y upgrade
 
 # install planet-venus
-aptitude install -y planet-venus nginx
+apt-get install --force-yes -y planet-venus nginx
 
 # create planet's structure
 mkdir -pv ${WHERE}/cache ${WHERE}/output ${WHERE}/output/images ${WHERE}/theme ${WHERE}/theme/images
