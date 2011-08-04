@@ -36,11 +36,31 @@ EOF
 chmod 600 ${HOME}/.s3curl
 
 # update the instance
-aptitude -y update
-aptitude -y upgrade
+apt-get --force-yes -y update
+apt-get --force-yes -y upgrade
+
+# preseed the answers for redmine (to avoid interactions, since we'll
+# override the config files with our own): we need debconf-utils
+apt-get --force-yes -y install debconf-utils
+cat >/root/preseed.cfg <<EOF
+redmine redmine/instances/default/dbconfig-upgrade      boolean true
+redmine redmine/instances/default/dbconfig-remove       boolean
+redmine redmine/instances/default/dbconfig-install      boolean false
+redmine redmine/instances/default/dbconfig-reinstall    boolean false
+redmine redmine/instances/default/pgsql/admin-pass      password
+redmine redmine/instances/default/pgsql/app-pass        password	VLAvJOPLM8OP
+redmine redmine/instances/default/pgsql/changeconf      boolean false
+redmine redmine/instances/default/pgsql/method  select  unix socket
+redmine redmine/instances/default/database-type select  pgsql
+redmine redmine/instances/default/pgsql/manualconf      note
+redmine redmine/instances/default/pgsql/authmethod-admin        select	ident
+redmine redmine/instances/default/pgsql/admin-user      string  postgres
+redmine redmine/instances/default/pgsql/authmethod-user select  password
+EOF
+debconf-set-selections /root/preseed.cfg
 
 # install redmine and supporting packages 
-aptitude install -y redmine librmagick-ruby libapache2-mod-passenger libdbd-pg-ruby
+apt-get install --force-yes -y redmine-pgsql redmine librmagick-ruby libapache2-mod-passenger apache2 libdbd-pg-ruby libdigest-hmac-perl
 
 # since we are using apache2, let's stop it, disable the default web site
 # and enable the needed modules (passenger, ssl and rewrite)
@@ -52,12 +72,20 @@ a2enmod ssl
 a2enmod rewrite
 
 # we need the cert and key for ssl configuration
-${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/ssl-cert.crt > /etc/ssl/certs/ssl-cert.crt
+${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/ssl-cert.pem > /etc/ssl/certs/ssl-cert.pem
+chmod 644 /etc/ssl/certs/ssl-cert.pem
 ${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/ssl-cert.key > /etc/ssl/private/ssl-cert.key
+chgrp ssl-cert /etc/ssl/private/ssl-cert.key
+chmod 640 /etc/ssl/private/ssl-cert.key
 
 # let's setup redmine's email access and database
 ${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/email.yml > /etc/redmine/default/email.yml
+chgrp www-data /etc/redmine/default/email.yml
+chmod 640 /etc/redmine/default/email.yml
 ${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/database.yml > /etc/redmine/default/database.yml
+chgrp www-data /etc/redmine/default/database.yml
+chmod 640 /etc/redmine/default/database.yml
+
 
 # get redmine's configuration file and enable it
 ${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/redmine > /etc/apache2/sites-available/redmine
