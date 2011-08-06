@@ -12,9 +12,23 @@ WALRUS_KEY="xxxxxxxxxxxxxxxxxxxx"	# EC2_ACCESS_KEY
 WALRUS_ID="xxxxxxxxxxxxxxxxxxxx"	# EC2_SECRET_KEY
 WALRUS_URL="http://${WALRUS_IP}:8773/services/Walrus/redmine"	# conf bucket
 
+LOCAL_SMTP="Y"				# install exim4 locally
+ROOT_EMAIL="my_name@example.com"	# admin email recipient
+EMAIL_NAME="projects.example.com"	# mailname
+
+# do we want extra plugins (which live in github)? 
+PLUGINS=""
+
+# we do use git clone and a cronjob to have source code mirrored locally
+# for redmine's users consumptions
+GIT_REPO="/media/ephemeral0/repos"
+#REMOTE_GIT="git://github.com/EucalyptusSystems/Eucalyptus-Scripts.git"
+REMOTE_GIT=""
+REDMINE_USER="www-data"
+
+
 # Modification below this point are needed only to customize the behavior
 # of the script.
-
 
 # the modified s3curl to interact with the above walrus
 S3CURL="/usr/bin/s3curl-euca.pl"
@@ -59,8 +73,70 @@ redmine redmine/instances/default/pgsql/authmethod-user select  password
 EOF
 debconf-set-selections /root/preseed.cfg
 
+# install local SMTP server is needed
+if [ "${LOCAL_SMTP}" = "Y" ]; then
+	# add more preseeding for exim4
+	cat >>/root/preseed.cfg <<EOF
+exim4-daemon-light	exim4-daemon-light/drec	error	
+exim4-config	exim4/dc_other_hostnames	string	
+exim4-config	exim4/dc_eximconfig_configtype	select	internet site; mail is sent and received directly using SMTP
+exim4-config	exim4/no_config	boolean	true
+exim4-config	exim4/hide_mailname	boolean	
+exim4-config	exim4/dc_postmaster	string	${ROOT_EMAIL}
+exim4-config	exim4/dc_smarthost	string	
+exim4-config	exim4/dc_relay_domains	string	
+exim4-config	exim4/dc_relay_nets	string	
+exim4-base	exim4/purge_spool	boolean	false
+exim4-config	exim4/mailname	string	${MAIL_NAME}
+exim4-config	exim4/dc_readhost	string	
+exim4	exim4/drec	error	
+exim4-base	exim4-base/drec	error	
+exim4-config	exim4/use_split_config	boolean	false
+exim4-config	exim4/dc_localdelivery	select	mbox format in /var/mail/
+exim4-config	exim4/dc_local_interfaces	string	127.0.0.1 ; ::1
+exim4-config	exim4/dc_minimaldns	boolean	false
+EOF
+
+	# install exim4 now
+	apt-get install --force-yes -y exim4
+fi
+
 # install redmine and supporting packages 
-apt-get install --force-yes -y redmine-pgsql redmine librmagick-ruby libapache2-mod-passenger apache2 libdbd-pg-ruby libdigest-hmac-perl
+apt-get install --force-yes -y redmine-pgsql redmine librmagick-ruby libapache2-mod-passenger apache2 libdbd-pg-ruby libdigest-hmac-perl git
+
+# now install plugins if we have them
+for x in $PLUGINS ; do
+	(cd /usr/share/redmine/vendors/plugin; git clone $x) || true
+done
+
+# now let's setup the git repo for the sources
+if [ "${REMOTE_GIT}" != "" ]; then
+	# create repo with the right permissions
+	mkdir -p ${GIT_REPO}
+	chown ${REDMINE_USER} ${GIT_REPO}
+	chmod 2755 ${GIT_REPO}
+
+	# save the ssh key of github into the redmine's user home
+	REDMINE_HOME="`getent passwd ${REDMINE_USER} |cut -d ':' -f 6`"
+	mkdir ${REDMINE_HOME}/.ssh
+	chown ${REDMINE_USER} ${REDMINE_HOME}/.ssh
+	chmod 700 ${REDMINE_HOME}/.ssh
+	ssh-keyscan github.com > ${REDMINE_HOME}/.ssh/known_hosts
+	chown ${REDMINE_USER} ${REDMINE_HOME}/.ssh/known_hosts
+
+	# get the repo
+	(cd ${GIT_REPO}; su -c "git clone ${REMOTE_GIT}" ${REDMINE_USER})
+
+	# setup the cronjob
+	LOCAL_REPOS="`ls ${GIT_REPO}`"
+	cat >/tmp/redmine_cronjob <<EOF
+*/3 * * * * cd ${GIT_REPO}/LOCAL_REPOS && git pull >> /dev/null
+EOF
+	chown ${REDMINE_USER} /tmp/redmine_cronjob
+	crontab -u ${REDMINE_USER} /tmp/redmine_cronjob
+	rm /tmp/redmine_cronjob
+fi
+
 
 # since we are using apache2, let's stop it, disable the default web site
 # and enable the needed modules (passenger, ssl and rewrite)

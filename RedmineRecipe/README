@@ -25,8 +25,17 @@ email.yml: contains the configuration to allow redmine to send emails
 database.yml: contains the configuration to reach the database
 redmine: contains the apache configuration we use
 
+For the email there is an options to install a local SMTP server (exim4
+in this case): the values for the mailname and the email address to
+receive the admin emails will need to be modified.
+
 In database.yml we like to use the private IP address of the database
 instance so we don't need to expose the database externally.
+
+The variable PLUGINS can contains a list of github URL pointing to redmine
+plugins to be installed. WARNING: some plugins will requires a newer
+version of redmine! For example we needed to upgrade to testing to use
+PLUGINS="git://github.com/kulesa/redmine_better_gantt_chart.git"
 
 
 Usage
