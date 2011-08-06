@@ -130,7 +130,7 @@ if [ "${REMOTE_GIT}" != "" ]; then
 	# setup the cronjob
 	LOCAL_REPOS="`ls ${GIT_REPO}`"
 	cat >/tmp/redmine_cronjob <<EOF
-*/3 * * * * cd ${GIT_REPO}/LOCAL_REPOS && git pull >> /dev/null
+*/3 * * * * cd ${GIT_REPO}/${LOCAL_REPOS} && git pull >> /dev/null
 EOF
 	chown ${REDMINE_USER} /tmp/redmine_cronjob
 	crontab -u ${REDMINE_USER} /tmp/redmine_cronjob
