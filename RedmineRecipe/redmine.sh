@@ -123,15 +123,20 @@ if [ "${REMOTE_GIT}" != "" ]; then
 	chmod 700 ${REDMINE_HOME}/.ssh
 	ssh-keyscan github.com > ${REDMINE_HOME}/.ssh/known_hosts
 	chown ${REDMINE_USER} ${REDMINE_HOME}/.ssh/known_hosts
+fi
 
-	# get the repo
-	(cd ${GIT_REPO}; su -c "git clone ${REMOTE_GIT}" ${REDMINE_USER})
+# now let's clone the repos
+for x in ${REMOTE_GIT} ; do 
+	# get the repos
+	(cd ${GIT_REPO}; su -c "git clone ${x}" ${REDMINE_USER})
+done
 
-	# setup the cronjob
-	LOCAL_REPOS="`ls ${GIT_REPO}`"
-	cat >/tmp/redmine_cronjob <<EOF
-*/3 * * * * cd ${GIT_REPO}/${LOCAL_REPOS} && git pull >> /dev/null
-EOF
+# now let's setup the cronjob
+if [ "${REMOTE_GIT}" != "" ]; then
+	for x in `ls ${GIT_REPO}` ; do
+		echo "*/3 * * * * cd ${GIT_REPO}/${x} && git pull >> /dev/null" >> /tmp/redmine_cronjob
+	done
+
 	chown ${REDMINE_USER} /tmp/redmine_cronjob
 	crontab -u ${REDMINE_USER} /tmp/redmine_cronjob
 	rm /tmp/redmine_cronjob
