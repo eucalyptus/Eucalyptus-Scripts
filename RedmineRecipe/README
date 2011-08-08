@@ -37,6 +37,8 @@ plugins to be installed. WARNING: some plugins will requires a newer
 version of redmine! For example we needed to upgrade to testing to use
 PLUGINS="git://github.com/kulesa/redmine_better_gantt_chart.git"
 
+The scripts can also setup clones of remotes git repos (ie github) to
+allow redmine users to browse and reference code. 
 
 Usage
 -----

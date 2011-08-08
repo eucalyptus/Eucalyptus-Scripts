@@ -22,7 +22,7 @@ PLUGINS=""
 # we do use git clone and a cronjob to have source code mirrored locally
 # for redmine's users consumptions
 GIT_REPO="/media/ephemeral0/repos"
-#REMOTE_GIT="git://github.com/EucalyptusSystems/Eucalyptus-Scripts.git"
+#REMOTE_GIT="git://github.com/EucalyptusSystems/Eucalyptus-Scripts.git git://github.com/EucalyptusSystems/s3curl.git"
 REMOTE_GIT=""
 REDMINE_USER="www-data"
 
