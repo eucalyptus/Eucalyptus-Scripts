@@ -148,7 +148,7 @@ else
 	/etc/init.d/postgresql start
 fi
 
-# set up a cron-job to save the database to a bucket
+# set up a cron-job to save the database to a bucket: it will run as root
 cat >/usr/local/bin/pg_backup.sh <<EOF
 #!/bin/sh
 su - -c "pg_dumpall > /$MOUNT_POINT/backup" ${USER}
@@ -164,7 +164,6 @@ sed -i 's/-day_of_month/-$(date +%d)/' /usr/local/bin/pg_backup.sh
 
 # change execute permissions and ownership
 chmod +x /usr/local/bin/pg_backup.sh
-chown ${USER} /usr/local/bin/pg_backup.sh
 
 if [ "$WALRUS_BACKUP" != "Y" ]; then
 	# we are done here
@@ -175,6 +174,5 @@ fi
 cat >/tmp/crontab <<EOF
 30 * * * * /usr/local/bin/pg_backup.sh
 EOF
-chown ${USER} /tmp/crontab
-crontab -u ${USER} /tmp/crontab
+crontab /tmp/crontab
 
