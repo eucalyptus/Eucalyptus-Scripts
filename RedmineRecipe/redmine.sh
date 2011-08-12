@@ -17,7 +17,7 @@ ROOT_EMAIL="my_name@example.com"	# admin email recipient
 EMAIL_NAME="projects.example.com"	# mailname
 
 # do we want extra plugins (which live in github)? 
-#PLUGINS="https://github.com/thorin/redmine_ldap_sync.git https://github.com/kulesa/redmine_better_gantt_chart.git"
+#PLUGINS="https://github.com/thorin/redmine_ldap_sync.git https://github.com/kulesa/redmine_better_gantt_chart.git https://github.com/thorin/redmine_ldap_sync.git"
 PLUGINS=""
 
 # we do use git clone and a cronjob to have source code mirrored locally
