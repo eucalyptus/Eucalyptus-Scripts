@@ -72,12 +72,15 @@ redmine redmine/instances/default/pgsql/authmethod-admin        select	ident
 redmine redmine/instances/default/pgsql/admin-user      string  postgres
 redmine redmine/instances/default/pgsql/authmethod-user select  password
 EOF
+
+# set the preseed q/a
 debconf-set-selections /root/preseed.cfg
+rm -f /root/preseed.cfg
 
 # install local SMTP server is needed
 if [ "${LOCAL_SMTP}" = "Y" ]; then
 	# add more preseeding for exim4
-	cat >>/root/preseed.cfg <<EOF
+	cat >/root/preseed.cfg <<EOF
 exim4-daemon-light	exim4-daemon-light/drec	error	
 exim4-config	exim4/dc_other_hostnames	string	
 exim4-config	exim4/dc_eximconfig_configtype	select	internet site; mail is sent and received directly using SMTP
@@ -97,6 +100,9 @@ exim4-config	exim4/dc_localdelivery	select	mbox format in /var/mail/
 exim4-config	exim4/dc_local_interfaces	string	127.0.0.1 ; ::1
 exim4-config	exim4/dc_minimaldns	boolean	false
 EOF
+	# set the preseed q/a
+	debconf-set-selections /root/preseed.cfg
+	rm -f /root/preseed.cfg
 
 	# install exim4 now
 	apt-get install --force-yes -y exim4
