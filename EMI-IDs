@@ -1,0 +1,66 @@
+The followings are the informations associated with the latest images
+provided by Eucalyptus. You will find the appropriate information in
+/etc/image-id in each image. You can find more information on these images
+at
+        https://projects.eucalyptus.com/redmine/projects/images
+
+You can check the log associated with this file to see the changes
+associated with each release.
+
+centos x86_64 5.5: 
+        image_name="euca-centos-emi"
+        image_version="2011.07.21"
+        image_arch="x86_64"
+        image_file="euca-centos-2011.07.21-x86_64.img"
+        image_stamp="049b-3c06"
+        image_date="20110721013710"
+        recipe_name="centos-based"
+
+centos i386 5.5:
+        euca-centos-2011.07.02-i386.tgz
+        euca-centos-large-2011.07.02-i386.tgz
+        date 6e69-7565
+        stamp 20110716161844
+centos large x86_64 5.5: 
+        euca-centos-2011.07.02-x86_64.tgz
+        euca-centos-large-2011.07.02-x86_64.tgz
+        date 20110716163847
+        stamp dee2-dc8e
+centos large i386 5.5:
+        euca-centos-2011.07.02-i386.tgz
+        euca-centos-large-2011.07.02-i386.tgz
+        date 920c-ae83
+        stamp 20110716163603
+debian i386 6:
+        euca-debian-2011.07.02-i386.tgz
+        euca-debian-large-2011.07.02-i386.tgz
+        date 20110702112340
+        stamp fb76-566b
+
+debian x86_64 6:
+        image_name="euca-debian-emi"
+        image_version="2011.08.15"
+        image_arch="x86_64"
+        image_file="euca-debian-2011.08.15-x86_64.img"
+        image_stamp="082d-d3a4"
+        image_date="20110815122021"
+        recipe_name="debian-based
+
+ubuntu i386 10.04:
+        image_name="euca-ubuntu-emi"
+        image_version="2011.08.11"
+        image_arch="i386"
+        image_file="euca-ubuntu-2011.08.11-i386.img"
+        image_stamp="a4c1-6ba7"
+        image_date="20110811233553"
+        recipe_name="ubuntu-based"
+
+ubuntu x86_64 10.04:
+        image_name="euca-ubuntu-emi"
+        image_version="2011.08.11"
+        image_arch="x86_64"
+        image_file="euca-ubuntu-2011.08.11-x86_64.img"
+        image_stamp="0636-2aa7"
+        image_date="20110811234733"
+        recipe_name="ubuntu-based"
+
