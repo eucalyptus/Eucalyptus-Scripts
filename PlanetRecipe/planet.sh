@@ -33,6 +33,7 @@ cat >${WHERE}/execute <<EOF
 #!/bin/sh
 curl -f -o ${WHERE}/planet.ini --url ${WALRUS_URL}/planet.ini
 curl -f -o ${WHERE}/theme/index.html.tmpl --url ${WALRUS_URL}/index.html.tmpl
+curl -f -o ${WHERE}/output/favicon.ico --url ${WALRUS_URL}/favicon.ico
 curl -f -o ${WHERE}/output/images/logo.png --url ${WALRUS_URL}/logo.png
 curl -f -o ${WHERE}/output/planet.css --url ${WALRUS_URL}/planet.css
 cd ${WHERE} && planet --verbose planet.ini
