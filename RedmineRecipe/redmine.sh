@@ -35,7 +35,7 @@ REDMINE_USER="www-data"
 S3CURL="/usr/bin/s3curl-euca.pl"
 
 # get the s3curl script
-curl -f -o ${S3CURL} --url http://173.205.188.8:8773/services/Walrus/s3curl/s3curl-euca.pl
+curl -s -f -o ${S3CURL} --url http://173.205.188.8:8773/services/Walrus/s3curl/s3curl-euca.pl
 chmod 755 ${S3CURL}
 
 # now let's setup the id for accessing walrus
@@ -160,23 +160,23 @@ a2enmod ssl
 a2enmod rewrite
 
 # we need the cert and key for ssl configuration
-${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/ssl-cert.pem > /etc/ssl/certs/ssl-cert.pem
+${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/ssl-cert.pem > /etc/ssl/certs/ssl-cert.pem
 chmod 644 /etc/ssl/certs/ssl-cert.pem
-${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/ssl-cert.key > /etc/ssl/private/ssl-cert.key
+${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/ssl-cert.key > /etc/ssl/private/ssl-cert.key
 chgrp ssl-cert /etc/ssl/private/ssl-cert.key
 chmod 640 /etc/ssl/private/ssl-cert.key
 
 # let's setup redmine's email access and database
-${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/email.yml > /etc/redmine/default/email.yml
+${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/email.yml > /etc/redmine/default/email.yml
 chgrp www-data /etc/redmine/default/email.yml
 chmod 640 /etc/redmine/default/email.yml
-${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/database.yml > /etc/redmine/default/database.yml
+${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/database.yml > /etc/redmine/default/database.yml
 chgrp www-data /etc/redmine/default/database.yml
 chmod 640 /etc/redmine/default/database.yml
 
 
 # get redmine's configuration file and enable it
-${S3CURL} --id ${WALRUS_NAME} --get -- $WALRUS_URL/redmine > /etc/apache2/sites-available/redmine
+${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/redmine > /etc/apache2/sites-available/redmine
 a2ensite redmine
 
 # start apache

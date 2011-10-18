@@ -40,7 +40,7 @@ S3CURL="/usr/bin/s3curl-euca.pl"
 
 # get the s3curl script
 echo "Getting ${S3CURL}"
-curl -f -o ${S3CURL} --url http://173.205.188.8:8773/services/Walrus/s3curl/s3curl-euca.pl
+curl -s -f -o ${S3CURL} --url http://173.205.188.8:8773/services/Walrus/s3curl/s3curl-euca.pl
 chmod 755 ${S3CURL}
 
 # now let's setup the id for accessing walrus
@@ -131,7 +131,7 @@ if [ ! -d $MOUNT_POINT/main ]; then
 	/etc/init.d/postgresql start
 
 	# and recover from bucket
-	${S3CURL} --id ${WALRUS_NAME} -- ${WALRUS_URL}/${WALRUS_MASTER} > /$MOUNT_POINT/backup
+	${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/${WALRUS_MASTER} > /$MOUNT_POINT/backup
 	# check for error
 	if [ "`head -c 6 /$MOUNT_POINT/backup`" = "<Error" ]; then
 		echo "Cannot get backup!"
@@ -154,9 +154,9 @@ cat >/usr/local/bin/pg_backup.sh <<EOF
 su - -c "pg_dumpall > /$MOUNT_POINT/backup" ${USER}
 # WARNING: the bucket in ${WALRUS_URL} *must* have been already created
 # keep one copy per day of the month
-${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- ${WALRUS_URL}/${WALRUS_MASTER}-day_of_month
+${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- -s ${WALRUS_URL}/${WALRUS_MASTER}-day_of_month
 # and push it to be the latest backup too for easy recovery
-${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- ${WALRUS_URL}/${WALRUS_MASTER}
+${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- -s ${WALRUS_URL}/${WALRUS_MASTER}
 rm /$MOUNT_POINT/backup
 EOF
 # substitute to get the day of month

@@ -31,11 +31,11 @@ cp -pv /usr/share/planet-venus/theme/common/images/* ${WHERE}/output/images
 # let's create a script to update the skinning of the planet
 cat >${WHERE}/execute <<EOF
 #!/bin/sh
-curl -f -o ${WHERE}/planet.ini --url ${WALRUS_URL}/planet.ini
-curl -f -o ${WHERE}/theme/index.html.tmpl --url ${WALRUS_URL}/index.html.tmpl
-curl -f -o ${WHERE}/output/favicon.ico --url ${WALRUS_URL}/favicon.ico
-curl -f -o ${WHERE}/output/images/logo.png --url ${WALRUS_URL}/logo.png
-curl -f -o ${WHERE}/output/planet.css --url ${WALRUS_URL}/planet.css
+curl -s -f -o ${WHERE}/planet.ini --url ${WALRUS_URL}/planet.ini
+curl -s -f -o ${WHERE}/theme/index.html.tmpl --url ${WALRUS_URL}/index.html.tmpl
+curl -s -f -o ${WHERE}/output/favicon.ico --url ${WALRUS_URL}/favicon.ico
+curl -s -f -o ${WHERE}/output/images/logo.png --url ${WALRUS_URL}/logo.png
+curl -s -f -o ${WHERE}/output/planet.css --url ${WALRUS_URL}/planet.css
 cd ${WHERE} && planet --verbose planet.ini
 EOF
 
