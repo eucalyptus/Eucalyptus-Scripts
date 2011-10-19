@@ -54,7 +54,7 @@ echo "${MAILNAME}" > /etc/mailname
 echo "${MAILNAME}" > /etc/hostname
 hostname ${MAILNAME}
 LOCALIP="`curl -s -f -m 20 http://169.254.169.254/latest/meta-data/local-ipv4`"
-echo -e "${LOCALIP}\t${MAILNAME}" >> /etc/hosts
+echo "${LOCALIP}      ${MAILNAME}" >> /etc/hosts
 
 # mailman and exim requires some preseed to prevent questions
 echo "Preseeding debconf for mailman and exim"
@@ -88,7 +88,10 @@ rm -f /root/preseed.cfg
 
 # install mailman
 echo "Installing mailman"
-apt-get install --force-yes -y mailman
+apt-get install --force-yes -y mailman ntp ntpdate
+
+# just sync the date first
+ntpdate -s
 
 # let's make sure we have the mountpoint
 echo "Creating and prepping ${MOUNT_POINT}"
@@ -134,6 +137,10 @@ dc_use_split_config='false'
 dc_hide_mailname=''
 dc_mailname_in_oh='true'
 dc_localdelivery='mail_spool'
+EOF
+cat >/etc/exim4/exim4.conf.localmacros <<EOF
+SYSTEM_ALIASES_USER = list
+SYSTEM_ALIASES_PIPE_TRANSPORT = address_pipe
 EOF
 
 # regenerate config and restart service
