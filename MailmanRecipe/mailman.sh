@@ -4,7 +4,7 @@
 
 # variables associated with the cloud/walrus to use: CHANGE them to
 # reflect your walrus configuration
-WALRUS_NAME="my_walrus"                 # arbitrary name 
+WALRUS_NAME="community"                 # arbitrary name 
 WALRUS_IP="173.205.188.8"               # IP of the walrus to use
 WALRUS_ID="xxxxxxxxxxxxxxxxxxxxx"       # EC2_ACCESS_KEY
 WALRUS_KEY="xxxxxxxxxxxxxxxxxxx"        # EC2_SECRET_KEY
@@ -140,8 +140,21 @@ EOF
 service exim4 stop
 # there seems to be a bug for which exim is not properly stopped
 killall exim4
+rm /var/log/exim4/paniclog
 update-exim4.conf
 service exim4 start
+
+# let's setup apache's configuration
+echo "Configuring apache"
+${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/lists > /etc/apache2/sites-available/lists
+if [ "`head -c 4 /etc/apache2/sites-available/lists`" = "<Err" ]; then
+        echo "Couldn't get apache configuration!"
+        exit 1
+fi
+a2dissite default
+a2ensite lists
+a2enmod rewrite
+service apache2 restart
 
 # now let's get the archives from the walrus bucket
 echo "Retrieving mailman archives and configuration"
@@ -179,6 +192,8 @@ ${S3CURL} --id ${WALRUS_NAME} --put /${MOUNT_POINT}/archive.tgz -- -s ${WALRUS_U
 ${S3CURL} --id ${WALRUS_NAME} --put /${MOUNT_POINT}/archive.tgz -- -s ${WALRUS_URL}/${WALRUS_MASTER}
 # and save the aliases too
 ${S3CURL} --id ${WALRUS_NAME} --put /etc/aliases -- -s ${WALRUS_URL}/aliases
+# finally the apache config file
+${S3CURL} --id ${WALRUS_NAME} --put /etc/apache2/sites-available/lists -- -s ${WALRUS_URL}/lists
 rm /${MOUNT_POINT}/archive.tgz
 EOF
 # substitute to get the day of month
