@@ -17,7 +17,7 @@ modprobe acpiphp
 # simple attempt to get the user ssh key using the meta-data service
 mkdir -p /root/.ssh
 echo >> /root/.ssh/authorized_keys
-curl -m 10 -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key | grep 'ssh-rsa' >> /root/.ssh/authorized_keys
+curl --retry 3 --retry-delay 10 -m 45 -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key | grep 'ssh-rsa' >> /root/.ssh/authorized_keys
 echo "AUTHORIZED_KEYS:"
 echo "************************"
 cat /root/.ssh/authorized_keys
@@ -45,7 +45,7 @@ fi
 
 # check if the user-data is a script, and if so execute it
 TMP_FILE="/tmp/user-data-$$"
-curl --retry 3 --retry-delay 10 -o $TMP_FILE http://169.254.169.254/latest/user-data
+curl --retry 3 --retry-delay 10 -m 60 -o $TMP_FILE http://169.254.169.254/latest/user-data
 if [ -s $TMP_FILE ]; then
 	echo "Downloaded user data in $TMP_FILE"
 	if [ "`head -c 2 $TMP_FILE`" = "#!" ]; then
