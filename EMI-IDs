@@ -39,11 +39,11 @@ debian i386 6:
 
 debian x86_64 6:
         image_name="euca-debian-emi"
-        image_version="2011.08.15"
+        image_version="2011.10.23"
         image_arch="x86_64"
-        image_file="euca-debian-2011.08.15-x86_64.img"
-        image_stamp="082d-d3a4"
-        image_date="20110815122021"
+        image_file="euca-debian-2011.10.23-x86_64.img"
+        image_stamp="75c8-092f"
+        image_date="20111023142451"
         recipe_name="debian-based
 
 ubuntu i386 10.04:
