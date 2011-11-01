@@ -1,4 +1,4 @@
-Postgres Recipe
+Mailman Recipe
 --------------
 
 This recipe is a very simple recipe to be used with our test images
@@ -24,6 +24,3 @@ When starting with one of our debian-based images you can do something
 like
 
 	euca-run-instance -g mailman -k XXXX emi-XXXXXX -f mailman.sh 
-
-After which the database should be running with the latest dump retrieved
-from the Walrus bucket.

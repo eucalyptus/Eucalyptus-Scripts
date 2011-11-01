@@ -188,7 +188,7 @@ fi
 
 # set up a cron-job to save the archives and config to a bucket: it will
 # run as root
-echo "Preparing local script to push backups to warlrus"
+echo "Preparing local script to push backups to walrus"
 cat >/usr/local/bin/mailman_backup.sh <<EOF
 #!/bin/sh
 tar -C /var/lib/mailman -czf /${MOUNT_POINT}/archive.tgz . 
