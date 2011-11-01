@@ -88,9 +88,58 @@ if ! mount |grep ${MOUNT_POINT}; then
         fi
 fi
 
-# now let's get the exim configured
+# Install supybot
+tempdir=`mktemp -d`
+git clone --depth 1 git://github.com/ProgVal/Limnoria.git $tempdir/supybot
+pushd $tempdir/supybot
+python setup.py install
+popd
+rm -rf $tempdir
 
-# regenerate config and restart service
+# Install the MeetBot plugin
+darcs get http://anonscm.debian.org/darcs/collab-maint/MeetBot/ /usr/local/python2.6/dist-packages/supybot/plugins/MeetBot
+
+# Install remaining plugins
+tempdir=`mktemp -d`
+git clone -depth 1 git://github.com/gholms/supybot-rtquery.git
+$tempdir/supybot-rtquery
+mv -nT $tempdir/supybot-rtquery/RTQuery /usr/local/python2.6/dist-packages/supybot/plugins/RTQuery
+git clone -depth 1 git://github.com/gholms/supybot.redmine.git $tempdir/supybot-redmine
+mv -nT $tempdir/supybot-redmine/Redmine /usr/local/python2.6/dist-packages/supybot/plugins/Redmine
+git clone -depth 1 git://github.com/ProgVal/supybot.plugins.git $tempdir/supybot-plugins
+mv -nT $tempdir/supybot-plugins/AttackProtector /usr/local/python2.6/dist-packages/supybot/plugins/AttackProtector
+rm -rf $tempdir
+
+# Supybot instances' data go in subdirectories of this
+install -d -m 0710 /var/lib/supybot -g www-data
+
+# Instance 1 lives on chat.freenode.net:6697
+useradd -g www-data -M -N -r -s /usr/sbin/nologin supybot1
+install -d -m 0710 /var/lib/supybot/1              -o supybot1 -g www-data
+install -d -m 0750 /var/lib/supybot/1/meeting-logs -o supybot1 -g www-data
+#W Write /var/lib/supybot/1/supybot.conf
+mkdir /var/lib/supybot/1/conf
+## Write /var/lib/supybot/1/conf/users.conf
+chown -R supybot1:www-data /var/lib/supybot/1
+
+# Instance 2 lives on irc.eucalyptus-systems.com:6667
+useradd -g www-data -M -N -r -s /usr/sbin/nologin supybot2
+install -d -m 0710 /var/lib/supybot/2              -o supybot2 -g www-data
+install -d -m 0750 /var/lib/supybot/2/meeting-logs -o supybot2 -g www-data
+#W Write /var/lib/supybot/2/supybot.conf
+mkdir /var/lib/supybot/2/conf
+## Write /var/lib/supybot/2/conf/users.conf
+chown -R supybot2:www-data /var/lib/supybot/2
+
+## Write /etc/init.d/supybot (see contents below)
+update-rc.d supybot defaults
+service supybot start
+
+## TODO:  set up SSL and LDAP schtick
+## Write /etc/apache2/sites-available/supybot (see contents below)
+a2dissite default
+a2ensite supybot
+service apache2 restart
 
 # let's setup apache's configuration
 echo "Configuring apache"
