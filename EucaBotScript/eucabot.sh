@@ -11,9 +11,6 @@ WALRUS_KEY="xxxxxxxxxxxxxxxxxxx"        # EC2_SECRET_KEY
 WALRUS_URL="http://${WALRUS_IP}:8773/services/Walrus/eucabot"	# conf bucket
 WALRUS_MASTER="eucabot-archive.tgz"	# master copy of the database
 
-# mailman related configuration
-MAILNAME="lists.eucalyptus.com"         # the public hostname
-POSTMASTER="community@eucalyptus.com"   # email to receive exim errors
 MOUNT_POINT="/eucabot"                  # archives and data are on ephemeral
 
 # do backup on walrus?
@@ -101,8 +98,7 @@ darcs get http://anonscm.debian.org/darcs/collab-maint/MeetBot/ /usr/local/pytho
 
 # Install remaining plugins
 tempdir=`mktemp -d`
-git clone -depth 1 git://github.com/gholms/supybot-rtquery.git
-$tempdir/supybot-rtquery
+git clone -depth 1 git://github.com/gholms/supybot-rtquery.git $tempdir/supybot-rtquery
 mv -nT $tempdir/supybot-rtquery/RTQuery /usr/local/python2.6/dist-packages/supybot/plugins/RTQuery
 git clone -depth 1 git://github.com/gholms/supybot.redmine.git $tempdir/supybot-redmine
 mv -nT $tempdir/supybot-redmine/Redmine /usr/local/python2.6/dist-packages/supybot/plugins/Redmine
@@ -136,21 +132,16 @@ update-rc.d supybot defaults
 service supybot start
 
 ## TODO:  set up SSL and LDAP schtick
-## Write /etc/apache2/sites-available/supybot (see contents below)
-a2dissite default
-a2ensite supybot
-service apache2 restart
 
 # let's setup apache's configuration
 echo "Configuring apache"
-${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/lists > /etc/apache2/sites-available/lists
-if [ "`head -c 4 /etc/apache2/sites-available/lists`" = "<Err" ]; then
+${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/supybot > /etc/apache2/sites-available/supybot
+if [ "`head -c 4 /etc/apache2/sites-available/supybot`" = "<Err" ]; then
         echo "Couldn't get apache configuration!"
         exit 1
 fi
 a2dissite default
-a2ensite lists
-a2enmod rewrite
+a2ensite supybot
 service apache2 restart
 
 # now let's get the archives from the walrus bucket
@@ -178,7 +169,7 @@ ${S3CURL} --id ${WALRUS_NAME} --put /${MOUNT_POINT}/archive.tgz -- -s ${WALRUS_U
 # and save the aliases too
 ${S3CURL} --id ${WALRUS_NAME} --put /etc/aliases -- -s ${WALRUS_URL}/aliases
 # finally the apache config file
-${S3CURL} --id ${WALRUS_NAME} --put /etc/apache2/sites-available/lists -- -s ${WALRUS_URL}/lists
+${S3CURL} --id ${WALRUS_NAME} --put /etc/apache2/sites-available/supybot -- -s ${WALRUS_URL}/supybot
 rm /${MOUNT_POINT}/archive.tgz
 EOF
 # substitute to get the day of month
