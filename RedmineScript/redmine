@@ -4,7 +4,7 @@
     ServerAdmin projects-administrator@eucalyptus.com
     ServerName projects.eucalyptus.com
     RewriteEngine On
-    RewriteRule ^(.*)$ https://projects.eucalyptus.com/$1 [R=301,L]
+    RewriteRule ^(.*)$ https://projects.eucalyptus.com$1 [R=301,L]
 </VirtualHost>
 
 <VirtualHost *:443>

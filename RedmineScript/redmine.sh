@@ -174,6 +174,12 @@ ${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/database.yml > /etc/redmin
 chgrp www-data /etc/redmine/default/database.yml
 chmod 640 /etc/redmine/default/database.yml
 
+# add a theme...
+cd /usr/share/redmine/public/themes
+mkdir -p martini/images
+mkdir -p martini/stylesheets
+${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/martini/images/loading.gif > martini/images/loading.gif
+${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/martini/stylesheets/application.css > martini/stylesheets/application.css
 
 # get redmine's configuration file and enable it
 ${S3CURL} --id ${WALRUS_NAME} --get -- -s $WALRUS_URL/redmine > /etc/apache2/sites-available/redmine
