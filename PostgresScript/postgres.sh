@@ -131,17 +131,17 @@ if [ ! -d $MOUNT_POINT/main ]; then
 	/etc/init.d/postgresql start
 
 	# and recover from bucket
-	${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/${WALRUS_MASTER} > /$MOUNT_POINT/backup
+	${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/${WALRUS_MASTER} > $MOUNT_POINT/$WALRUS_MASTER
 	# check for error
-	if [ "`head -c 6 /$MOUNT_POINT/backup`" = "<Error" ]; then
+	if [ "`head -c 6 $MOUNT_POINT/$WALRUS_MASTER`" = "<Error" ]; then
 		echo "Cannot get backup!"
 		echo "Database is empty: disabling auto-backup."
 		WALRUS_BACKUP="N"
 	else 
-		chown ${USER} /$MOUNT_POINT/backup
-		chmod 600 /$MOUNT_POINT/backup
-		su - -c "psql -f /$MOUNT_POINT/backup postgres" postgres
-		rm /$MOUNT_POINT/backup
+		chown ${USER} $MOUNT_POINT/$WALRUS_MASTER
+		chmod 600 $MOUNT_POINT/$WALRUS_MASTER
+		su - -c "psql -f $MOUNT_POINT/$WALRUS_MASTER postgres" postgres
+		rm $MOUNT_POINT/$WALRUS_MASTER
 	fi
 else
 	# database is in place: just start 
@@ -151,13 +151,13 @@ fi
 # set up a cron-job to save the database to a bucket: it will run as root
 cat >/usr/local/bin/pg_backup.sh <<EOF
 #!/bin/sh
-su - -c "pg_dumpall > /$MOUNT_POINT/backup" ${USER}
+su - -c "pg_dumpall > $MOUNT_POINT/$WALRUS_MASTER" ${USER}
 # WARNING: the bucket in ${WALRUS_URL} *must* have been already created
 # keep one copy per day of the month
-${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- -s ${WALRUS_URL}/${WALRUS_MASTER}-day_of_month
+${S3CURL} --id ${WALRUS_NAME} --put $MOUNT_POINT/$WALRUS_MASTER -- -s ${WALRUS_URL}/${WALRUS_MASTER}-day_of_month
 # and push it to be the latest backup too for easy recovery
-${S3CURL} --id ${WALRUS_NAME} --put /$MOUNT_POINT/backup -- -s ${WALRUS_URL}/${WALRUS_MASTER}
-rm /$MOUNT_POINT/backup
+${S3CURL} --id ${WALRUS_NAME} --put $MOUNT_POINT/$WALRUS_MASTER -- -s ${WALRUS_URL}/${WALRUS_MASTER}
+rm $MOUNT_POINT/$WALRUS_MASTER
 EOF
 # substitute to get the day of month
 sed -i 's/-day_of_month/-$(date +%d)/' /usr/local/bin/pg_backup.sh
