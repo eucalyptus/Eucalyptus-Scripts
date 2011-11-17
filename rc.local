@@ -12,7 +12,7 @@
 
 # load pci hotplug for dynamic disk attach in KVM (for EBS)
 depmod -a
-modprobe acpiphp
+modprobe acpiphp || true
 
 # simple attempt to get the user ssh key using the meta-data service
 mkdir -p /root/.ssh
