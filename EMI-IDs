@@ -7,30 +7,36 @@ at
 You can check the log associated with this file to see the changes
 associated with each release.
 
-centos x86_64 5.5: 
-        image_name="euca-centos-emi"
-        image_version="2011.07.21"
-        image_arch="x86_64"
-        image_file="euca-centos-2011.07.21-x86_64.img"
-        image_stamp="049b-3c06"
-        image_date="20110721013710"
-        recipe_name="centos-based"
+centos x86_64 5: 
+	image_name="euca-centos-emi"
+	image_version="2011.12.28"
+	image_arch="x86_64"
+	image_file="euca-centos-2011.12.28-x86_64.img"
+	image_stamp="a400-423c"
+	image_date="20111228145408"
+	recipe_name="centos-based"
 
-centos i386 5.5:
+centos i386 5:
         euca-centos-2011.07.02-i386.tgz
         euca-centos-large-2011.07.02-i386.tgz
         date 6e69-7565
         stamp 20110716161844
-centos large x86_64 5.5: 
-        euca-centos-2011.07.02-x86_64.tgz
-        euca-centos-large-2011.07.02-x86_64.tgz
-        date 20110716163847
-        stamp dee2-dc8e
+
+centos large x86_64 5: 
+	image_name="euca-centos-emi"
+	image_version="2011.12.28"
+	image_arch="x86_64"
+	image_file="euca-large-centos-2011.12.28-x86_64.img"
+	image_stamp="6e39-bc49"
+	image_date="20111228152326"
+	recipe_name="centos-based"
+
 centos large i386 5.5:
         euca-centos-2011.07.02-i386.tgz
         euca-centos-large-2011.07.02-i386.tgz
         date 920c-ae83
         stamp 20110716163603
+
 debian i386 6:
         euca-debian-2011.07.02-i386.tgz
         euca-debian-large-2011.07.02-i386.tgz
@@ -38,13 +44,22 @@ debian i386 6:
         stamp fb76-566b
 
 debian x86_64 6:
-        image_name="euca-debian-emi"
-        image_version="2011.10.23"
-        image_arch="x86_64"
-        image_file="euca-debian-2011.10.23-x86_64.img"
-        image_stamp="75c8-092f"
-        image_date="20111023142451"
-        recipe_name="debian-based
+	image_name="euca-debian-emi"
+	image_version="2011.12.28"
+	image_arch="x86_64"
+	image_file="euca-debian-2011.12.28-x86_64.img"
+	image_stamp="3b0c-1930"
+	image_date="20111228153505"
+	recipe_name="debian-based
+
+debian large x86_64 6:
+	image_name="euca-large-debian-emi"
+	image_version="2011.12.28"
+	image_arch="x86_64"
+	image_file="euca-large-debian-2011.11.28-x86_64.img"
+	image_stamp="98cd-d174"
+	image_date="20111228154146"
+	recipe_name="debian-based"
 
 ubuntu i386 10.04:
         image_name="euca-ubuntu-emi"
