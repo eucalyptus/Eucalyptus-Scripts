@@ -71,11 +71,20 @@ ubuntu i386 10.04:
         recipe_name="ubuntu-based"
 
 ubuntu x86_64 10.04:
-        image_name="euca-ubuntu-emi"
-        image_version="2011.08.11"
-        image_arch="x86_64"
-        image_file="euca-ubuntu-2011.08.11-x86_64.img"
-        image_stamp="0636-2aa7"
-        image_date="20110811234733"
-        recipe_name="ubuntu-based"
+	image_name="euca-ubuntu-10.04-emi"
+	image_version="2011.12.28"
+	image_arch="x86_64"
+	image_file="euca-ubuntu-10.04-2011.12.28-x86_64.img"
+	image_stamp="ff87-cde3"
+	image_date="20111228171650"
+	recipe_name="ubuntu-10.04-based"
+
+ubuntu large x86_64 10.04:
+	image_name="euca-large-ubuntu-emi"
+	image_version="2011.12.28"
+	image_arch="x86_64"
+	image_file="euca-large-ubuntu-10.04-2011.12.28-x86_64.img"
+	image_stamp="73bc-586a"
+	image_date="20111228173928"
+	recipe_name="ubuntu-10.04-based"
 
