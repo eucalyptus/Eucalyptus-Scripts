@@ -3,7 +3,7 @@ Eucalyptus Scripts
 
 This repository contains various scripts used with Eucalyptus. For example
 it contains what we use to implement the SLA (Service Level Agreements)
-for the ECC (Eucalyptys Community Cloud at http://open.eucalyptus.com/try).
+for the ECC (Eucalyptus Community Cloud at http://open.eucalyptus.com/try).
 Others examples will be scripts used with our test images (which are
 provided on http://open.eucalyptus.com).
 
