@@ -10,6 +10,26 @@
 # bits.
 #
 
+# since ephemeral or swap may not be mounted or on different devices
+# (specially on xen) let's look for them. This is fairly hackish.
+if ! swapon -s|grep partition > /dev/null ; then
+	# no swap partition
+	for x in `ls /dev/[xvsh]*d[a-z]3` ; do
+		swapon $x 2> /dev/null
+	done
+fi
+if ! mount | cut -f 1 -d ' '|grep /dev|grep 2 > /dev/null ; then
+	mkdir -p /media/ephemeral0
+	if [ -d /media/ephemeral0 ]; then
+		if [ -z "`ls /media/ephemeral0/*`" ]; then
+			# try to mount only if the mount point is empty
+			for x in `ls /dev/[xvsh]*d[a-z]2` ; do
+				mount $x /media/ephemeral0 2> /dev/null
+			done
+		fi
+	fi
+fi
+
 # load pci hotplug for dynamic disk attach in KVM (for EBS)
 depmod -a
 modprobe acpiphp || true
@@ -35,26 +55,6 @@ hostname $META_HOSTNAME
 echo >> /etc/hosts
 echo "${META_IP}   ${META_HOSTNAME}" >> /etc/hosts
 
-
-# since ephemeral or swap may not be mounted or on different devices
-# (specially on xen) let's look for them. This is fairly hackish.
-if ! swapon -s|grep partition > /dev/null ; then
-	# no swap partition
-	for x in `ls /dev/[xvsh]*d[a-z]3` ; do
-		swapon $x 2> /dev/null
-	done
-fi
-if ! mount | cut -f 1 -d ' '|grep /dev|grep 2 > /dev/null ; then
-	mkdir -p /media/ephemeral0
-	if [ -d /media/ephemeral0 ]; then
-		if [ -z "`ls /media/ephemeral0/*`" ]; then
-			# try to mount only if the mount point is empty
-			for x in `ls /dev/[xvsh]*d[a-z]2` ; do
-				mount $x /media/ephemeral0 2> /dev/null
-			done
-		fi
-	fi
-fi
 
 # check if the user-data is a script, and if so execute it
 TMP_FILE="/tmp/user-data-$$"
