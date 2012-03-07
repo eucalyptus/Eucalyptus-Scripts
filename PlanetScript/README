@@ -15,7 +15,7 @@ the file to the Walrus bucket and the cronjob will pick it up. Any s3 tool
 that allows to change the endpoint URL should work. To upload the modified
 config files we do:
 
-        s3curl --id <id> --acl public-read --put <configfile> -- $S3_URL/planet/<configfile>
+        s3curl --id <id> --acl public-read --put <configfile> -- $S3_URL/euca-planet/<configfile>
 
 The modified s3curl can be retrieved with 
         curl -f -o s3curl --url http://173.205.188.8:8773/services/Walrus/s3curl/s3curl-euca.pl
