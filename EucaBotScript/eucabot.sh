@@ -186,7 +186,7 @@ update-rc.d supybot defaults
 # Set up a cron-job to save the archives and config to a bucket. It will
 # run as root
 echo "Preparing local script to push backups to walrus"
-cat >/etc/cron.hourly/eucabot_backup.sh <<EOF
+cat >/etc/cron.hourly/eucabot-backup <<EOF
 #!/bin/sh
 chmod -R g+rwX ${MOUNT_POINT}/plugins
 tar -C ${MOUNT_POINT} -czpf ${MOUNT_POINT}/archive.tgz .
@@ -204,10 +204,10 @@ ${S3CURL} --id ${WALRUS_NAME} --put /etc/apache2/sites-available/supybot -- -s $
 rm ${MOUNT_POINT}/archive.tgz
 EOF
 # substitute to get the day of month
-sed -i 's/-day_of_month/-$(date +%d)/' /etc/cron.hourly/eucabot_backup.sh
+sed -i 's/-day_of_month/-$(date +%d)/' /etc/cron.hourly/eucabot-backup
 
 # change execute permissions and ownership
-chmod +x /etc/cron.hourly/eucabot_backup.sh
+chmod +x /etc/cron.hourly/eucabot-backup
 
 # Start the bot(s)
 service supybot start
