@@ -42,15 +42,20 @@ chmod 600 ${HOME}/.s3curl
 
 # update the instance
 echo "Upgrading and installing packages"
+export DEBIAN_FRONTEND=noninteractive
+export DEBIAN_PRIORITY=critical
 apt-get --force-yes -y update
 apt-get --force-yes -y upgrade
 
-# needed preseed to make it non-interactive
-echo "Preseeding debconf"
-cat /root/preseed.cfg <<EOF
-EOF
-debconf-set-selections /root/preseed.cfg
-rm -f /root/preseed.cfg
+hostname meetbot.eucalyptus.com
+
+grep -q meetbot /etc/hosts || echo '173.205.188.126 meetbot.eucalyptus.com meetbot' >> /etc/hosts
+
+# just sync the date first
+apt-get install --force-yes -y ntpdate
+ntpdate pool.ntp.org
+apt-get install --force-yes -y ntp
+sleep 60
 
 # install deps
 echo "Installing dependencies"
