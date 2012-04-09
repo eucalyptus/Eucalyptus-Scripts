@@ -21,6 +21,12 @@ RESTORE_FROM_WALRUS="Y"
 # Modification below this point are needed only to customize the behavior
 # of the script.
 
+# just sync the date first
+apt-get install --force-yes -y ntpdate
+ntpdate pool.ntp.org
+apt-get install --force-yes -y ntp
+sleep 60
+
 # the modified s3curl to interact with the above walrus
 S3CURL="/usr/bin/s3curl-euca.pl"
 
@@ -52,12 +58,6 @@ apt-get --force-yes -y upgrade
 hostname meetbot.eucalyptus.com
 
 grep -q meetbot /etc/hosts || echo '173.205.188.126 meetbot.eucalyptus.com meetbot' >> /etc/hosts
-
-# just sync the date first
-apt-get install --force-yes -y ntpdate
-ntpdate pool.ntp.org
-apt-get install --force-yes -y ntp
-sleep 60
 
 # install deps
 echo "Installing dependencies"
