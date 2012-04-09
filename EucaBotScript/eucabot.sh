@@ -12,6 +12,8 @@ WALRUS_URL="http://${WALRUS_IP}:8773/services/Walrus/eucabot"  # conf bucket
 ARCHIVE_TARBALL="eucabot-archive.tgz"   # master copy of the database
 
 MOUNT_POINT="/srv/supybot"              # archives and data are on ephemeral
+MOUNT_MOUNT_POINT="N"                   # whether to mount something there or
+                                        # just make a directory on the rootfs
 
 # do backup on walrus?
 RESTORE_FROM_WALRUS="Y"
@@ -68,7 +70,7 @@ echo "Creating and prepping ${MOUNT_POINT}"
 mkdir -p ${MOUNT_POINT}
 
 # don't mount ${MOUNT_POINT} more than once (mainly for debugging)
-if ! mount |grep ${MOUNT_POINT}; then
+if [[ "${MOUNT_MOUNT_POINT}" = Y ]] && ! mount | grep ${MOUNT_POINT}; then
         # let's see where ephemeral is mounted, and either mount
         # it in the final place (${MOUNT_POINT}) or mount -o bind
         EPHEMERAL="`curl -s -f -m 20 http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0`"
