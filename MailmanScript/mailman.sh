@@ -154,7 +154,7 @@ service exim4 start
 # let's setup apache's configuration
 echo "Configuring apache"
 ${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/lists > /etc/apache2/sites-available/lists
-if [ "`head -c 4 /etc/apache2/sites-available/lists`" = "<Err" ]; then
+if [ "`head -c 4 /etc/apache2/sites-available/lists`" = "<Err" -o "`head -c 4 /etc/apache2/sites-available/lists`" = "Fail" ]; then
         echo "Couldn't get apache configuration!"
         exit 1
 fi
@@ -164,10 +164,11 @@ a2enmod rewrite
 service apache2 restart
 
 # now let's get the archives from the walrus bucket
+service mailman stop
 echo "Retrieving mailman archives and configuration"
 ${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/${WALRUS_MASTER} > /${MOUNT_POINT}/master_copy.tgz
 mkdir /${MOUNT_POINT}/mailman
-if [ "`head -c 4 /${MOUNT_POINT}/master_copy.tgz`" = "<Err" ]; then
+if [ "`head -c 4 /${MOUNT_POINT}/master_copy.tgz`" = "<Err" -o "`head -c 4 /${MOUNT_POINT}/master_copy.tgz`" = "Fail"  ]; then
         echo "Couldn't get archives!"
         exit 1
 else
@@ -178,13 +179,15 @@ fi
 
 # and the aliases
 ${S3CURL} --id ${WALRUS_NAME} -- -s ${WALRUS_URL}/aliases > /${MOUNT_POINT}/aliases
-if [ "`head -c 4 /${MOUNT_POINT}/aliases`" = "<Err" ]; then
+if [ "`head -c 4 /${MOUNT_POINT}/aliases`" = "<Err" -o "`head -c 4 /${MOUNT_POINT}/aliases`" = "Fail" ]; then
         echo "Couldn't get aliases!"
         exit 1
 else
-        mv /${MOUNT_POINT}/aliases /etc/aliases
+        mv /etc/aliases /etc/aliases.orig
+        cp /${MOUNT_POINT}/aliases /etc/aliases
         newaliases
 fi
+service mailman start
 
 # set up a cron-job to save the archives and config to a bucket: it will
 # run as root
