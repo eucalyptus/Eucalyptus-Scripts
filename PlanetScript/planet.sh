@@ -4,7 +4,7 @@
 #
 
 # where is the configuration stored
-WALRUS_URL="http://173.205.188.8:8773/services/Walrus/planet/"
+WALRUS_URL="http://173.205.188.8:8773/services/Walrus/euca-planet/"
 
 # USER to own the planet's files (ubuntu for Ubuntu, and www-data for
 # Debian)
