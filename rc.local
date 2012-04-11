@@ -64,7 +64,7 @@ if [ -s $TMP_FILE ]; then
 	if [ "`head -c 2 $TMP_FILE`" = "#!" ]; then
 		chmod 700 $TMP_FILE
 		echo "User data is a script: executing it"
-		sh $TMP_FILE
+		sh $TMP_FILE > /root/user-data.out 2>&1 
 	fi
 fi
 
