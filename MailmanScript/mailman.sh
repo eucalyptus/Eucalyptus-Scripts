@@ -195,15 +195,38 @@ echo "Preparing local script to push backups to walrus"
 cat >/usr/local/bin/mailman_backup.sh <<EOF
 #!/bin/sh
 tar -C /var/lib/mailman -czf /${MOUNT_POINT}/archive.tgz . 
-# WARNING: the bucket in ${WALRUS_URL} *must* have been already created
+# check the bucket exists
+if ${S3CURL} --id ${WALRUS_NAME} -- ${WALRUS_URL}/${WALRUS_MASTER}|grep NoSuchBucket ; then
+        echo
+        echo "${WALRUS_URL}/${WALRUS_MASTER} does not exist: you need to"
+        echo "create it to have backups."
+        echo
+        exit 1
+fi
 # keep one copy per day of the month
-${S3CURL} --id ${WALRUS_NAME} --put /${MOUNT_POINT}/archive.tgz -- -s ${WALRUS_URL}/${WALRUS_MASTER}-day_of_month
+if ${S3CURL} --id ${WALRUS_NAME} --put /${MOUNT_POINT}/archive.tgz -- -s ${WALRUS_URL}/${WALRUS_MASTER}-day_of_month | grep -v ETag ; then
+        echo 
+        echo "Failed to upload to walrus!"
+        exit 1
+fi
 # and push it to be the latest backup too for easy recovery
-${S3CURL} --id ${WALRUS_NAME} --put /${MOUNT_POINT}/archive.tgz -- -s ${WALRUS_URL}/${WALRUS_MASTER}
+if ${S3CURL} --id ${WALRUS_NAME} --put /${MOUNT_POINT}/archive.tgz -- -s ${WALRUS_URL}/${WALRUS_MASTER} |grep -v ETag; then 
+        echo 
+        echo "Failed to upload to walrus!"
+        exit 1
+fi
 # and save the aliases too
-${S3CURL} --id ${WALRUS_NAME} --put /etc/aliases -- -s ${WALRUS_URL}/aliases
+if ${S3CURL} --id ${WALRUS_NAME} --put /etc/aliases -- -s ${WALRUS_URL}/aliases |grep -v ETag; then
+        echo 
+        echo "Failed to upload to walrus!"
+        exit 1
+fi
 # finally the apache config file
-${S3CURL} --id ${WALRUS_NAME} --put /etc/apache2/sites-available/lists -- -s ${WALRUS_URL}/lists
+if ${S3CURL} --id ${WALRUS_NAME} --put /etc/apache2/sites-available/lists -- -s ${WALRUS_URL}/lists |grep -v ETag; then
+        echo 
+        echo "Failed to upload to walrus!"
+        exit 1
+fi
 rm /${MOUNT_POINT}/archive.tgz
 EOF
 # substitute to get the day of month
