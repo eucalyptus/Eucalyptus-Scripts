@@ -1,0 +1,43 @@
+Update Recipe
+--------------
+
+This recipe has been created to automatically update a CentOS 6 or Debian 6 
+image as soon as it is started. 
+
+Details
+-------
+
+The recipe will check if the file /etc/redhat-release for CentOS or
+/etc/debian-version for Debian is existing on the system to use the 
+specific command to update the linux distribution.
+
+I struggled with this for a while using different methods.
+
+* using lsb_release is not a good idea as it is not installed by default 
+	on a CentOS minimal distribution
+* the /etc/proc file using different columns on various OS
+* /etc/issue is not working because of permissions issues also, the
+	administrator can manually change this file.
+
+
+Usage
+-----
+
+Make sure you have a security group which allow for port 22 (SSH) to be
+open: 
+
+	euca-add-group -d "default group" default
+	euca-authorize -p 22 -P tcp -s 0.0.0.0/0 default
+
+When starting with one of your debian-, centos-based images you can do something
+like
+
+	euca-run-instance -k XXXX emi-XXXXXX -f update.sh 
+
+REMARKS
+-------
+
+This recipe has been used to install a puppet agent into each instance, it's
+also possible to package your /etc/puppet tree with for example fpm distributing 
+it online and installing this tree into the launched instance so you can immediately
+use the puppet functionality
