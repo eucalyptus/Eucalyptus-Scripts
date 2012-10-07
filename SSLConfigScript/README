@@ -1,0 +1,45 @@
+Scripts Description
+----
+
+IMPORTANT: this script will modify the keystore that eucalyptus uses for ALL internal certificates used to sign internal messages as well as VM images that are registered. Be sure to back up the $EUCALYPTUS/var/lib/eucalyptus/keys/euca.p12 file in a safe place before running this script. The script itself will create a backup and should be safe, but if this keystore is lost, your cloud will no longer function and you will have to reinstall the cloud and re-register all VM images.
+
+This script will configure Eucalyptus to use a user-provided certificate for SSL connections to the Eucalyptus and Walrus API services. Specifically, for port 8773 on the CLC and Walrus node.
+
+This script should be run from within the $EUCALYPTUS/var/lib/eucalyptus/keys directory as it will expect to find the eucalyptus java keystore (euca.p12) in the same directory as the script. This, of course, could be changed in future versions of this script. For the script to fully configure eucalyptus to use the provided certificate, the $EUCALYPTUS variable in the environment must be set to the root of the eucalpytus installation. Typically that location is '/' if eucalyptus was installed from packages.
+
+The script first creates a backup of the euca.p12 keystore as the file euca.p12.backup. It then creates a new pkcs12 keystore (tempkeystore.p12) that contains the certificate and private key specified by the user. It then imports that keystore into a working copy of the eucalyptus keystore, specifically the file euca.p12.working. The script then checks that the import worked and if successful will copy the working file over the regular euca.p12 file and then configure eucalyptus properties to use the certificate (based on alias provided by the user) for SSL connections. That configuration is done via a pair of calls to euca-modify-properties.
+
+The script is interactive and will prompt the user for the certificate file to import (a .crt file), the private key file to import for that certficate, the password to place on that private key within the eucalyptus keystore (this is distinct from the keystore password itself), and optionally it will attempt to add the CA certificate if specified by the user into the java 1.6 jvm trusted root keystore (cacerts).
+
+The script requires:
+* Must be run on the CLC (or one CLC if in HA mode) in the $EUCALYPTUS/var/lib/eucalyptus/keys directory.
+* $EUCALYPTUS must be set to the root of the Eucalyptus install (typically, this is '/')
+* User must provide a certificate file, private key file associated with that certificate for signing. The private key should NOT have a passphrase attached.
+* User must provide an alias to refer to that certificate, and a password to protect the private key when it is in the Eucalyptus keystore.
+* The euca.p12 keystore should be in the same directory as the script when run. You may create your own backup of that file, but the script will use euca.p12.backup, so if you use that name then the file will be overwritten when the script runs and does its own backup.
+
+Configuring SSL for Eucalyptus in HA mode (for CLCs and/or Walrus):
+The script must be run on one of the CLC machines. The process will require at least one restart of each CLC and Walrus machine in the system. 
+
+For two CLCs in an HA configuration (we will call them CLC "A" and CLC "B", it doesn't matter which is currently in HA states enabled or disabled):
+On CLC A
+1. Run config_euca_ssl.sh script in $EUCALYPTUS/var/lib/eucalyptus/keys directory of CLC A.
+2. Restart CLC A via 'service eucalyptus-cloud restart'.
+3. Ensure that it comes up fully, you can confirm this by calling 'euca-describe-services' and verifying that CLC A is in the output and in either "enabled" or "disabled" state.
+4. Check that configuration was successfull by using the check_euca_ssl.sh script also available in this project. See that script's README for how to do that.
+5. If successfull, next configure CLC B.
+
+On CLC B
+4. Copy euca.p12 from CLC A to CLC B but use another name for it on CLC B, for example: "euca.p12.A"
+5. Create backup of euca.p12 on CLC B. For example, call it "euca.p12.backup.B"
+6. On CLC B, replace the euca.p12 file with the euca.p12 from CLC A. For example: cp euca.p12.A euca.p12
+7. Restart CLC B via 'services eucalyptus-cloud restart'
+8. Ensure that the service starts fully.
+9. Test using the check_euca_ssl.sh on each CLC (you can do it one at a time as you run the config script as well.)
+
+If your Walrus nodes are distinct machines from the CLC machines then you need to repeat the CLC B process for each Walrus machine.
+
+
+Usage
+-----
+config_euca_ssl.sh

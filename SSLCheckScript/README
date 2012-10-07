@@ -1,0 +1,15 @@
+Script Description
+---------
+This script runs a series of checks on the local host to verify that SSL connections work and that certificates are found and valid.
+
+This script runs tests using OpenSSL and Gnutils against the 8773 and 8443 ports of the local host, 127.0.0.1. It will show the certificate used to authentiate the server for each endpoint and each ssl type. It checks SSLv2, SSLv3, and TLS1. 8773 is the default port for the Eucalyptus and Walrus services, and 8443 is the default port for the SSL connection to the Admin Console UI.
+
+It is not unexpected that SSLv2 will fail on many Eucalyptus installations, but SSLv3 should succeed if the configuration and setup of Eucalyptus is correct.
+
+It is common to see that a particular test failed because the certificate could not be locally verified, this is normal. If you see a "invalid certificate" or "handshake failure" then that is an indicator that something is wrong and that clients will fail to connect successfully.
+
+
+
+Usage
+---------
+check_euca_ssl.sh
