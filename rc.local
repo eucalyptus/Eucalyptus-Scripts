@@ -13,21 +13,21 @@
 # since ephemeral or swap may not be mounted or on different devices
 # (specially on xen) let's look for them. This is fairly hackish.
 if ! swapon -s|grep partition > /dev/null ; then
-	# no swap partition
-	for x in `ls /dev/[xvsh]*d[a-z]3` ; do
-		swapon $x 2> /dev/null
-	done
+    # no swap partition
+    for x in `ls /dev/[xvsh]*d[a-z]3` ; do
+        swapon $x 2> /dev/null
+    done
 fi
 if ! mount | cut -f 1 -d ' '|grep /dev|grep 2 > /dev/null ; then
-	mkdir -p /media/ephemeral0
-	if [ -d /media/ephemeral0 ]; then
-		if [ -z "`ls /media/ephemeral0/*`" ]; then
-			# try to mount only if the mount point is empty
-			for x in `ls /dev/[xvsh]*d[a-z]2` ; do
-				mount $x /media/ephemeral0 2> /dev/null
-			done
-		fi
-	fi
+    mkdir -p /media/ephemeral0
+    if [ -d /media/ephemeral0 ]; then
+        if [ -z "`ls /media/ephemeral0/*`" ]; then
+            # try to mount only if the mount point is empty
+            for x in `ls /dev/[xvsh]*d[a-z]2` ; do
+                mount $x /media/ephemeral0 2> /dev/null
+            done
+        fi
+    fi
 fi
 
 # load pci hotplug for dynamic disk attach in KVM (for EBS)
@@ -60,12 +60,12 @@ echo "${META_IP}   ${META_HOSTNAME}" >> /etc/hosts
 TMP_FILE="/tmp/user-data-$$"
 curl --retry 3 --retry-delay 10 -m 60 -o $TMP_FILE http://169.254.169.254/latest/user-data
 if [ -s $TMP_FILE ]; then
-	echo "Downloaded user data in $TMP_FILE"
-	if [ "`head -c 2 $TMP_FILE`" = "#!" ]; then
-		chmod 700 $TMP_FILE
-		echo "User data is a script: executing it"
-		$TMP_FILE > /root/user-data.out 2>&1 
-	fi
+    echo "Downloaded user data in $TMP_FILE"
+    if [ "`head -c 2 $TMP_FILE`" = "#!" ]; then
+        chmod 700 $TMP_FILE
+        echo "User data is a script: executing it"
+        $TMP_FILE > /root/user-data.out 2>&1 
+    fi
 fi
 
 exit 0
