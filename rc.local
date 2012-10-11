@@ -34,6 +34,19 @@ fi
 depmod -a
 modprobe acpiphp || true
 
+# Create the host keys for the SSH server
+for key_type in rsa dsa; do
+    if [ ! -f /etc/ssh/ssh_host_${key_type}_key ]; then
+        ssh-keygen -t ${key_type} -N '' -f /etc/ssh/ssh_host_${key_type}_key
+    fi
+done
+
+if [ -e /etc/init.d/sshd ]; then
+    service sshd restart
+else
+    service ssh restart
+fi
+
 # simple attempt to get the user ssh key using the meta-data service
 mkdir -p /root/.ssh
 echo >> /root/.ssh/authorized_keys
