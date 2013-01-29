@@ -1,13 +1,13 @@
-#!/bin/bash -x
+#!/bin/bash -xe
 #
 # Script to install eucabot
 
 # variables associated with the cloud/walrus to use: CHANGE them to
 # reflect your walrus configuration
 WALRUS_NAME="community"                 # arbitrary name
-WALRUS_IP="FIXME"                       # IP of the walrus to use
-WALRUS_ID="FIXME"                       # EC2_ACCESS_KEY
-WALRUS_KEY="FIXME"                      # EC2_SECRET_KEY
+WALRUS_IP="173.205.188.6"               # IP of the walrus to use
+WALRUS_ID="NO51NQGXKGNCVX7KKFN5I"       # EC2_ACCESS_KEY
+WALRUS_KEY="YLWpmpbB2oO0d7zYrzINIWVGxEsru3yVpMyoily3"  # EC2_SECRET_KEY
 WALRUS_URL="http://${WALRUS_IP}:8773/services/Walrus/eucabot"  # conf bucket
 ARCHIVE_TARBALL="eucabot-archive.tgz"   # master copy of the database
 
@@ -17,6 +17,10 @@ MOUNT_MOUNT_POINT="N"                   # whether to mount something there or
 
 # do backup on walrus?
 RESTORE_FROM_WALRUS="Y"
+
+# FIXME:  workaround for rc.local scripts that use ``sh $TMP_FILE'' instead
+# of simply executing ``$TMP_FILE''.
+[ `readlink -f /proc/$$/exe` = /bin/dash ] && exec /bin/bash -xe "$0" "$@"
 
 # Modification below this point are needed only to customize the behavior
 # of the script.
@@ -37,7 +41,9 @@ chmod 755 ${S3CURL}
 
 # now let's setup the id for accessing walrus
 echo "Setting credentials for ${S3CURL}"
-cat > /root/.s3curl <<EOF
+# On Debian 6 this seems to run with $HOME=/ instead of /root.
+#cat > /root/.s3curl <<EOF
+cat > /.s3curl <<EOF
 %awsSecretAccessKeys = (
     ${WALRUS_NAME} => {
         url => '${WALRUS_IP}',
@@ -46,7 +52,8 @@ cat > /root/.s3curl <<EOF
     },
 );
 EOF
-chmod 600 /root/.s3curl
+#chmod 600 /root/.s3curl
+chmod 600 /.s3curl
 
 # update the instance
 echo "Upgrading and installing packages"
@@ -61,7 +68,7 @@ grep -q meetbot /etc/hosts || echo '173.205.188.126 meetbot.eucalyptus.com meetb
 
 # install deps
 echo "Installing dependencies"
-apt-get install --force-yes -y apache2 darcs git python-twisted-names
+apt-get install --force-yes -y apache2 git python-twisted-names
 
 wget http://www.eucalyptus.com/favicon.ico -O /var/www/favicon.ico
 
@@ -136,14 +143,22 @@ popd
 rm -rf $tempdir
 
 # Install the MeetBot plugin
-darcs get http://anonscm.debian.org/darcs/collab-maint/MeetBot/ ${MOUNT_POINT}/plugins/MeetBot
+tempdir=`mktemp -d`
+git clone --depth 1 git://github.com/openstack-infra/meetbot.git $tempdir/meetbot
+pushd $tempdir/meetbot
+python setup.py install
+popd
+rm -rf $tempdir
 
 # Install remaining plugins
 tempdir=`mktemp -d`
 git clone --depth 1 git://github.com/gholms/supybot-plugins.git $tempdir/supybot-plugins-gholms
 mv -n $tempdir/supybot-plugins-gholms/* ${MOUNT_POINT}/plugins/
 git clone --depth 1 git://github.com/ProgVal/Supybot-plugins.git $tempdir/supybot-plugins-progval
-mv -nT $tempdir/supybot-plugins-progval/AttackProtector ${MOUNT_POINT}/plugins/AttackProtector
+mv -n $tempdir/supybot-plugins-progval/* ${MOUNT_POINT}/plugins/
+git clone --depth 1 git://github.com/jamessan/Supybot-Weather/ $tempdir/supybot-plugin-weather
+rm -rf tempdir/supybot-plugin-weather/.git*
+mv -nT $tempdir/supybot-plugin-weather ${MOUNT_POINT}/plugins/Weather
 rm -rf $tempdir
 
 chgrp -R www-data ${MOUNT_POINT}/plugins
@@ -154,8 +169,8 @@ chmod -R g+rwX    ${MOUNT_POINT}/plugins
 # let's setup apache's configuration
 echo "Configuring apache"
 cat >> /etc/ldap/ldap.conf << EOF
-BASE FIXME
-URI FIXME
+BASE dc=eucalyptus-systems,dc=com
+URI ldap://ldap.eucalyptus-systems.com
 TLS_CACERT /etc/ssl/certs/gd_bundle.crt
 TLS_REQCERT demand
 EOF
