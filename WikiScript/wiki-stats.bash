@@ -13,12 +13,12 @@ echo "<pre>" >> $STATSFILE
 git log -n 25 --pretty="%cn, %s (%h), %cr" >> $STATSFILE
 echo "</pre>" >> $STATSFILE
 
-echo "## Most Active Contributors, Last Month:\n\n" >> $STATSFILE
+echo "## Most Active Contributors, Last Month:" >> $STATSFILE
 echo "<pre>" >> $STATSFILE
 git log --since @{"1 month"} --pretty="%cn" | sort | uniq -c | sort -r >> $STATSFILE
 echo "</pre>" >> $STATSFILE
 
-echo "\n\n## Most Active Contributors, All Time:\n\n" >> $STATSFILE
+echo "## Most Active Contributors, All Time:" >> $STATSFILE
 echo "<pre>" >> $STATSFILE
 git log --pretty="%cn" | sort | uniq -c | sort -r >> $STATSFILE
 echo "</pre>" >> $STATSFILE
