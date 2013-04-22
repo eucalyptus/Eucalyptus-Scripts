@@ -1,0 +1,91 @@
+diff -rupN aws-sdk-1.8.5-original/lib/aws/core/client.rb aws-sdk-1.8.5/lib/aws/core/client.rb
+--- aws-sdk-1.8.5-original/lib/aws/core/client.rb	2013-04-20 02:51:22.029276942 +0000
++++ aws-sdk-1.8.5/lib/aws/core/client.rb	2013-04-20 03:09:21.403312330 +0000
+@@ -60,7 +60,6 @@ module AWS
+         @endpoint = config.send(:"#{service_ruby_name}_endpoint")
+         @port = config.send(:"#{service_ruby_name}_port")
+         @http_read_timeout = @config.http_read_timeout
+-
+       end
+ 
+       # @return [Configuration] This clients configuration.
+@@ -89,6 +88,11 @@ module AWS
+       # @private
+       attr_reader :endpoint
+ 
++      # @return [String] Returns the service path this client
++      #   makes requests against.
++      # @private
++      #attr_reader :uri
++
+       # @return (see Client.operations)
+       def operations
+         self.class.operations
+@@ -515,6 +519,9 @@ module AWS
+         http_request.host = endpoint
+         http_request.port = port
+         http_request.region = config.send(:"#{service_ruby_name}_region")
++	if AWS.config.respond_to?("#{service_ruby_name}_service_path")
++	  http_request.uri = config.send(:"#{service_ruby_name}_service_path")
++	end 
+         http_request.proxy_uri = config.proxy_uri
+         http_request.use_ssl = config.use_ssl?
+         http_request.ssl_verify_peer = config.ssl_verify_peer?
+diff -rupN aws-sdk-1.8.5-original/lib/aws/core/configuration.rb aws-sdk-1.8.5/lib/aws/core/configuration.rb
+--- aws-sdk-1.8.5-original/lib/aws/core/configuration.rb	2013-04-20 02:51:22.041270942 +0000
++++ aws-sdk-1.8.5/lib/aws/core/configuration.rb	2013-04-20 03:09:21.413308520 +0000
+@@ -537,6 +537,10 @@ module AWS
+ 
+       add_option :user_agent_prefix
+ 
++      add_option :ec2_service_path, '/'
++
++      add_option :s3_service_path, '/'
++
+     end
+   end
+ end
+diff -rupN aws-sdk-1.8.5-original/lib/aws/s3/client.rb aws-sdk-1.8.5/lib/aws/s3/client.rb
+--- aws-sdk-1.8.5-original/lib/aws/s3/client.rb	2013-04-20 02:51:22.041270942 +0000
++++ aws-sdk-1.8.5/lib/aws/s3/client.rb	2013-04-20 03:09:21.413308520 +0000
+@@ -1396,6 +1396,7 @@ module AWS
+       def new_request
+         req = S3::Request.new
+         req.force_path_style = config.s3_force_path_style?
++        req.service_path = config.s3_service_path
+         req
+       end
+ 
+diff -rupN aws-sdk-1.8.5-original/lib/aws/s3/request.rb aws-sdk-1.8.5/lib/aws/s3/request.rb
+--- aws-sdk-1.8.5-original/lib/aws/s3/request.rb	2013-04-20 02:51:22.049266936 +0000
++++ aws-sdk-1.8.5/lib/aws/s3/request.rb	2013-04-20 03:09:21.418306521 +0000
+@@ -31,6 +31,9 @@ module AWS
+       # @private
+       attr_accessor :force_path_style
+ 
++      # @private
++      attr_accessor :service_path
++
+       def metadata= metadata
+         Array(metadata).each do |name, value|
+           headers["x-amz-meta-#{name}"] = value
+@@ -71,7 +74,7 @@ module AWS
+         parts << bucket if bucket and path_style?
+         parts << escape_path(key) if key
+ 
+-        path = '/' + parts.join('/')
++	path = service_path + parts.join('/')
+         querystring = url_encoded_params
+ 
+         uri = ''
+diff -rupN aws-sdk-1.8.5-original/lib/aws/s3/s3_object.rb aws-sdk-1.8.5/lib/aws/s3/s3_object.rb
+--- aws-sdk-1.8.5-original/lib/aws/s3/s3_object.rb	2013-04-20 02:51:22.041270942 +0000
++++ aws-sdk-1.8.5/lib/aws/s3/s3_object.rb	2013-04-20 03:09:21.418306521 +0000
+@@ -1390,6 +1390,7 @@ module AWS
+         req.host = options.fetch(:endpoint, config.s3_endpoint)
+         req.port = options.fetch(:port, port)
+         req.force_path_style = options.fetch(:force_path_style, config.s3_force_path_style)
++	req.service_path = config.s3_service_path
+ 
+         REQUEST_PARAMETERS.each do |param|
+           req.add_param(param.to_s.tr("_","-"),
