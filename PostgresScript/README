@@ -23,13 +23,13 @@ s3curl will be download and install to access Walrus buckets: the key and
 id will need to be changes (values of WALRUS_ID and WALRUS_KEY) as well as
 the Walrus IP address (WALRUS_IP).
 
-s3curl will be used to donwload the previous database dump which will be
+s3curl will be used to download the previous database dump which will be
 in $WALRUS_URL/$WALRUS_MASTER (respectively Walrus URL with bucket and
 file name) and, if enabled (WALRUS_BACKUP="Y"), a cronjob will be setup to
 save the database into the same bucket. A copy of the database will be
-suffixed with the day of the month, thus a month worth of babkups will be
+suffixed with the day of the month, thus a month worth of backups will be
 saved in Walrus.  A copy of the latest database dump will be saved in
-$WALRUS_MASTER to ensure that a restart of the script will alwasy load the
+$WALRUS_MASTER to ensure that a restart of the script will always load the
 latest dump.
 
 The walrus bucket needs to already exists. If you use s3curl you can

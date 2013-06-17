@@ -1,10 +1,10 @@
 Scripts Description
 ----
-This script will restore the SSL configuration of Eucalytpus and Walrus back to using the default, self-signed, certificates that are genereated when Eucalyptus is installed. It requires that a backup of the original euca.p12 keystore exists and is specified as the first argument to this script.
+This script will restore the SSL configuration of Eucalyptus and Walrus back to using the default, self-signed, certificates that are generated when Eucalyptus is installed. It requires that a backup of the original euca.p12 keystore exists and is specified as the first argument to this script.
 
 IMPORTANT: this script will modify the keystore that eucalyptus uses for ALL internal certificates used to sign internal messages as well as VM images that are registered. Be sure to back up the $EUCALYPTUS/var/lib/eucalyptus/keys/euca.p12 file in a safe place before running this script. The script itself will create a backup and should be safe, but if this keystore is lost, your cloud will no longer function and you will have to reinstall the cloud and re-register all VM images.
 
-This script should be run from within the $EUCALYPTUS/var/lib/eucalyptus/keys directory as it will expect to find the eucalyptus java keystore (euca.p12) in the same directory as the script. This, of course, could be changed in future versions of this script. For the script to fully configure eucalyptus to use the provided certificate, the $EUCALYPTUS variable in the environment must be set to the root of the eucalpytus installation. Typically that location is '/' if eucalyptus was installed from packages.
+This script should be run from within the $EUCALYPTUS/var/lib/eucalyptus/keys directory as it will expect to find the eucalyptus java keystore (euca.p12) in the same directory as the script. This, of course, could be changed in future versions of this script. For the script to fully configure eucalyptus to use the provided certificate, the $EUCALYPTUS variable in the environment must be set to the root of the eucalyptus installation. Typically that location is '/' if eucalyptus was installed from packages.
 
 The script first creates a backup of the euca.p12 keystore as the file euca.p12.restore.backup. It then replaces the euca.p12 file with the file specified by the user on the command line. The script will next call the appropriate euca-modify-properties calls to use the original eucalyptus self-signed certificate for Eucalyptus and Walrus SSL connections.
 
@@ -21,8 +21,8 @@ On CLC A
 1. Run restore_euca_ssl.sh script in $EUCALYPTUS/var/lib/eucalyptus/keys directory of CLC A.
 2. Restart CLC A via 'service eucalyptus-cloud restart'.
 3. Ensure that it comes up fully, you can confirm this by calling 'euca-describe-services' and verifying that CLC A is in the output and in either "enabled" or "disabled" state.
-4. Check that configuration was successfull by using the check_euca_ssl.sh script also available in this project. See that script's README for how to do that.
-5. If successfull, next configure CLC B.
+4. Check that configuration was successful by using the check_euca_ssl.sh script also available in this project. See that script's README for how to do that.
+5. If successful, next configure CLC B.
 
 On CLC B
 4. Copy euca.p12 from CLC A to CLC B but use another name for it on CLC B, for example: "euca.p12.A"
