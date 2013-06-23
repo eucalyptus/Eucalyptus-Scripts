@@ -1,0 +1,2 @@
+KERNEL=="xvd*", PROGRAM="/sbin/euca-udev %k", SYMLINK+="%c"
+KERNEL=="vd*", PROGRAM="/sbin/euca-udev %k", SYMLINK+="%c"

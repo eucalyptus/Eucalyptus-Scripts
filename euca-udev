@@ -6,7 +6,9 @@ if [ "$#" -ne 1 ] ; then
 else
         if echo "$1"|grep -qE 'xvd[a-z][0-9]?' ; then
                 echo "$1" | sed -e 's/xvd/sd/'
+    elif echo "$1"|grep -qE 'vd[a-z][0-9]?' ; then
+        echo "$1" | sed -e 's/vd/sd/'
         else
-                echo "$1" 
+                echo "$1"
         fi
 fi
