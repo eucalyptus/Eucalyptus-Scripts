@@ -36,6 +36,12 @@ echo "************************"
 
 chown -R ec2-user:ec2-user /home/ec2-user/.ssh
 
+# restore security context
+if [ -x /sbin/restorecon ]; then
+	restorecon /root/.ssh/authorized_keys
+	restorecon /home/ec2-user/.ssh/authorized_keys
+fi
+
 # set the hostname to something sensible
 META_HOSTNAME="`curl -s http://169.254.169.254/latest/meta-data/local-hostname`"
 META_IP="`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`"
