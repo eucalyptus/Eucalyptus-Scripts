@@ -16,25 +16,28 @@ modprobe acpiphp || true
 
 # simple attempt to get the user ssh key using the meta-data service
 # set up root user
-mkdir -p /root/.ssh
-# set up ec2-user
-mkdir -p /home/ec2-user/.ssh
+if [ ! -d /root/.ssh ]; then
+    mkdir -p /root/.ssh
+elif [ ! -d /home/ec2-user/.ssh ]; then
+    # set up ec2-user
+    mkdir -p /home/ec2-user/.ssh
+elif [ ! -f /root/.ssh/authorized_keys ]; then
+    echo >> /root/.ssh/authorized_keys
+    curl --retry 3 --retry-delay 10 -m 45 -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key | grep 'ssh-rsa' | xargs -I {} echo "no-port-forwarding,no-agent-forwarding,no-X11-forwarding,command=\"echo 'Please login as the user ec2-user rather than the user root.';echo;sleep 10\" {}" >> /root/.ssh/authorized_keys
+    echo "AUTHORIZED_KEYS:"
+    echo "************************"
+    cat /root/.ssh/authorized_keys
+    echo "************************"
+elif [ ! -f /home/ec2-user/.ssh/authorized_keys ]; then
+    echo >> /home/ec2-user/.ssh/authorized_keys
+    curl --retry 3 --retry-delay 10 -m 45 -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key | grep 'ssh-rsa' >> /home/ec2-user/.ssh/authorized_keys
+    echo "AUTHORIZED_KEYS:"
+    echo "************************"
+    cat /home/ec2-user/.ssh/authorized_keys
+    echo "************************"
+    chown -R ec2-user:ec2-user /home/ec2-user/.ssh
+fi
 
-echo >> /root/.ssh/authorized_keys
-curl --retry 3 --retry-delay 10 -m 45 -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key | grep 'ssh-rsa' | xargs -I {} echo "no-port-forwarding,no-agent-forwarding,no-X11-forwarding,command=\"echo 'Please login as the user ec2-user rather than the user root.';echo;sleep 10\" {}" >> /root/.ssh/authorized_keys
-echo "AUTHORIZED_KEYS:"
-echo "************************"
-cat /root/.ssh/authorized_keys
-echo "************************"
-
-echo >> /home/ec2-user/.ssh/authorized_keys
-curl --retry 3 --retry-delay 10 -m 45 -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key | grep 'ssh-rsa' >> /home/ec2-user/.ssh/authorized_keys
-echo "AUTHORIZED_KEYS:"
-echo "************************"
-cat /home/ec2-user/.ssh/authorized_keys
-echo "************************"
-
-chown -R ec2-user:ec2-user /home/ec2-user/.ssh
 
 # restore security context
 if [ -x /sbin/restorecon ]; then

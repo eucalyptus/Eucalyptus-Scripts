@@ -48,13 +48,16 @@ else
 fi
 
 # simple attempt to get the user ssh key using the meta-data service
-mkdir -p /root/.ssh
-echo >> /root/.ssh/authorized_keys
-curl --retry 3 --retry-delay 10 -m 45 -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key | grep 'ssh-rsa' >> /root/.ssh/authorized_keys
-echo "AUTHORIZED_KEYS:"
-echo "************************"
-cat /root/.ssh/authorized_keys
-echo "************************"
+if [ ! -d /root/.ssh ]; then
+    mkdir -p /root/.ssh
+elif [ ! -f /root/.ssh/authorized_keys ]; then
+    echo >> /root/.ssh/authorized_keys
+    curl --retry 3 --retry-delay 10 -m 45 -s http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key | grep 'ssh-rsa' >> /root/.ssh/authorized_keys
+    echo "AUTHORIZED_KEYS:"
+    echo "************************"
+    cat /root/.ssh/authorized_keys
+    echo "************************"
+fi
 
 # restore security context
 if [ -x /sbin/restorecon ]; then
