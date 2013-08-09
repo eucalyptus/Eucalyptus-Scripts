@@ -3,12 +3,12 @@ This is a simple patch for the AWS Ruby SDK that makes it compatible with Eucaly
 
 INSTALLING AND PATCHING THE AWS RUBY SDK
 ----------------------------------------
-First, install the AWS Ruby SDK, all dependencies, and the Unix patch command.  The following commands work on Centos 6.4, for example:
+First, install the AWS Ruby SDK, all dependencies, and the Unix patch command.  The following commands work on CentOS 6.4, for example:
 
 yum install -y ruby ruby-devel rubygems libxml2 rubygem-nokogiri libxml2-devel libxslt-devel patch
 gem install aws-sdk -v 1.8.5
 
-Next, as root, go into the directory where the ruby gem lives. On Centos 6.4, for example:
+Next, as root, go into the directory where the ruby gem lives. On CentOS 6.4, for example:
 
 cd /usr/lib/ruby/gems/1.8/gems/aws-sdk-1.8.5-patchtest
 
