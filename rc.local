@@ -21,7 +21,7 @@ fi
 if ! mount | cut -f 1 -d ' '|grep /dev|grep 2 > /dev/null ; then
     mkdir -p /media/ephemeral0
     if [ -d /media/ephemeral0 ]; then
-        if [ -z "`ls /media/ephemeral0/*`" ]; then
+        if [ -z "`ls /media/ephemeral0/`" ]; then
             # try to mount only if the mount point is empty
             for x in `ls /dev/[xvsh]*d[a-z]2` ; do
                 mount $x /media/ephemeral0 2> /dev/null
